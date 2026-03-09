@@ -142,25 +142,26 @@ node bot/withdraw.js 0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913
 
 ## Running 24/7 (Ubuntu VPS)
 
-To keep the bot running when your laptop is off, you can deploy it to a dedicated Ubuntu Virtual Private Server (VPS).
+To keep the bot running 24/7 in the background without needing your laptop open, you can deploy it to a dedicated Ubuntu Virtual Private Server (VPS).
 
 **1. Log into your Server**
-Open your terminal and connect via SSH:
+Open your terminal and connect to your server via SSH:
 ```bash
 ssh root@YOUR_SERVER_IP
 ```
 
-**2. Install Node.js**
-Because it's a fresh server, you need to install Node:
+**2. Install Node.js & PM2**
+Because it's a fresh server, you need to install Node and a background process manager (`pm2`):
 ```bash
 curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
 sudo apt-get install -y nodejs
+sudo npm install -g pm2
 ```
 
-**3. Clone your Repository**
-Download your private code from GitHub:
+**3. Clone the Repository**
+Download the open-source bot code:
 ```bash
-git clone https://github.com/YOUR_USERNAME/aave-liquidation-bot.git
+git clone https://github.com/gitDivine/aave-liquidation-bot.git
 cd aave-liquidation-bot
 npm install
 ```
