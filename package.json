@@ -1,0 +1,19 @@
+{
+  "name": "aave-liquidation-bot",
+  "version": "1.0.0",
+  "description": "Aave V3 Liquidation Bot — Base, Arbitrum, Polygon",
+  "main": "bot/bot.js",
+  "scripts": {
+    "start": "node bot/bot.js",
+    "test": "node bot/test-connection.js"
+  },
+  "dependencies": {
+    "axios": "^1.6.7",
+    "dotenv": "^16.4.1",
+    "ethers": "^6.9.0",
+    "node-fetch": "^3.3.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

@@ -1,0 +1,19 @@
+# Node.js
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Environment Variables & Secrets
+.env
+.env.local
+.env.development
+.env.production
+
+# Watchlist Persistence
+watchlist.json
+
+# Local Build/Compiler outputs
+build/
+dist/
+artifacts/
+cache/
