@@ -18,7 +18,17 @@ npm install
 cp .env.example .env
 ```
 
-Open `.env` and fill in:
+Open `.env` in a text editor and fill in your values:
+
+```bash
+# Linux / Mac
+nano .env
+
+# Windows
+notepad .env
+```
+
+Fill in these fields, then save and close (`Ctrl+O` → `Enter` → `Ctrl+X` in nano):
 
 | Variable | Where to get it |
 |---|---|
