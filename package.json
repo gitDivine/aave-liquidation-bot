@@ -5,7 +5,8 @@
   "main": "bot/bot.js",
   "scripts": {
     "start": "node bot/bot.js",
-    "test": "node bot/test-connection.js"
+    "test": "node bot/test-connection.js",
+    "deploy": "node scripts/deploy.js"
   },
   "dependencies": {
     "axios": "^1.6.7",
@@ -15,5 +16,8 @@
   },
   "engines": {
     "node": ">=18.0.0"
+  },
+  "devDependencies": {
+    "solc": "^0.8.34"
   }
 }
