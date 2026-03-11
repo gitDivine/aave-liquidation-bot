@@ -485,6 +485,34 @@ async function main() {
   await scanPositions(); // immediate first scan
 
   log.success(`Bot is live on ${chainConfig.name}. Watching ${watchedUsers.size} positions.`);
+
+  // ── Telegram startup notification ──
+  const ethBal = ethers.formatEther(balance);
+  await notify(
+    `🟢 Liquidation Bot Started\n` +
+    `⛓ Chain: ${chainConfig.name}\n` +
+    `📋 Contract: ${CONTRACT_ADDR.slice(0, 10)}...\n` +
+    `👁 Watching: ${watchedUsers.size} positions\n` +
+    `🔋 ETH: ${parseFloat(ethBal).toFixed(4)}\n` +
+    `💵 Min profit: $${MIN_PROFIT_USD}`
+  );
+
+  // ── Hourly Telegram heartbeat ──
+  let heartbeatTick = 0;
+  setInterval(async () => {
+    heartbeatTick++;
+    // 120 ticks × 30s = 1 hour
+    if (heartbeatTick % 120 === 0) {
+      const currentBal = await httpProvider.getBalance(wallet.address);
+      await notify(
+        `💓 Liquidation Bot Alive\n` +
+        `⏱ Uptime: ${Math.floor(heartbeatTick / 120)}h\n` +
+        `👁 Watching: ${watchedUsers.size} positions\n` +
+        `💰 Earned: $${totalProfit.toFixed(2)}\n` +
+        `🔋 ETH: ${parseFloat(ethers.formatEther(currentBal)).toFixed(4)}`
+      );
+    }
+  }, 30_000);
 }
 
 // ── Graceful Shutdown ────────────────────────────────────────
