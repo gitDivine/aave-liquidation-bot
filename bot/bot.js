@@ -484,6 +484,17 @@ async function main() {
     process.exit(1);
   }
 
+  // ── Immediate Telegram startup ping ──
+  const ethBal = ethers.formatEther(balance);
+  await notify(
+    `🟢 Liquidation Bot Started\n` +
+    `⛓ Chain: ${chainConfig.name}\n` +
+    `📋 Contract: ${CONTRACT_ADDR.slice(0, 10)}...\n` +
+    `🔋 ETH: ${parseFloat(ethBal).toFixed(4)}\n` +
+    `💵 Min profit: $${MIN_PROFIT_USD}\n` +
+    `⏳ Loading positions...`
+  );
+
   // Start fresh ETH price updates
   await refreshEthPrice();
   setInterval(refreshEthPrice, 60_000); // update every minute
@@ -504,15 +515,11 @@ async function main() {
 
   log.success(`Bot is live on ${chainConfig.name}. Watching ${watchedUsers.size} positions.`);
 
-  // ── Telegram startup notification ──
-  const ethBal = ethers.formatEther(balance);
+  // ── Telegram ready notification ──
   await notify(
-    `🟢 Liquidation Bot Started\n` +
-    `⛓ Chain: ${chainConfig.name}\n` +
-    `📋 Contract: ${CONTRACT_ADDR.slice(0, 10)}...\n` +
+    `✅ Liquidation Bot Ready\n` +
     `👁 Watching: ${watchedUsers.size} positions\n` +
-    `🔋 ETH: ${parseFloat(ethBal).toFixed(4)}\n` +
-    `💵 Min profit: $${MIN_PROFIT_USD}`
+    `🔄 Scanning every 30s`
   );
 
   // ── Hourly Telegram heartbeat ──
