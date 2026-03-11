@@ -522,11 +522,25 @@ async function main() {
     `🔄 Scanning every 30s`
   );
 
-  // ── Hourly Telegram heartbeat ──
+  // ── Hourly Telegram heartbeat + 10-min update checks ──
   let heartbeatTick = 0;
   setInterval(async () => {
     heartbeatTick++;
-    // 120 ticks × 30s = 1 hour
+
+    // Every 20 ticks × 30s = 10 minutes — check for updates
+    if (heartbeatTick % 20 === 0) {
+      try {
+        const result = execSync("git pull", { encoding: "utf8", timeout: 15000 }).trim();
+        if (result !== "Already up to date." && result !== "Already up-to-date.") {
+          log.info(`[Update] New code pulled: ${result}`);
+          await notify(`🔄 Update found — restarting bot...`);
+          execSync("npm install --omit=dev", { encoding: "utf8", timeout: 30000 });
+          process.exit(0); // PM2 will auto-restart with new code
+        }
+      } catch { }
+    }
+
+    // 120 ticks × 30s = 1 hour — Telegram heartbeat
     if (heartbeatTick % 120 === 0) {
       const currentBal = await httpProvider.getBalance(wallet.address);
       await notify(
