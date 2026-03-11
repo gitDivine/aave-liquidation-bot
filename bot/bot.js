@@ -6,7 +6,25 @@
 require("dotenv").config();
 const { ethers } = require("ethers");
 const fs = require("fs");
+const { execSync } = require("child_process");
 const { CHAINS, AAVE_POOL_ABI, ERC20_ABI, BOT_CONTRACT_ABI } = require("./config");
+
+function autoUpdate() {
+  try {
+    console.log("[Update] Checking for updates...");
+    const pullResult = execSync("git pull", { encoding: "utf8", timeout: 15000 }).trim();
+    console.log(`[Update] ${pullResult}`);
+    if (pullResult !== "Already up to date." && pullResult !== "Already up-to-date.") {
+      console.log("[Update] New code pulled — installing dependencies...");
+      execSync("npm install --omit=dev", { encoding: "utf8", timeout: 30000 });
+      console.log("[Update] Dependencies updated ✓");
+    }
+  } catch (err) {
+    console.warn("[Update] Auto-update skipped:", err.message);
+  }
+}
+
+autoUpdate();
 
 const WATCHLIST_FILE = "./watchlist.json";
 
