@@ -4,6 +4,36 @@ Zero-capital liquidation bot using **Aave V3 flash loans**. Runs on **Base**, **
 
 ## Quick Start
 
+### 0. Install Dependencies
+
+You need **Git** and **Node.js 18+** installed on your machine.
+
+**Ubuntu / Debian:**
+```bash
+sudo apt update
+sudo apt install -y git curl
+curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+sudo apt install -y nodejs
+```
+
+**macOS:**
+```bash
+# Install Homebrew if you don't have it
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+brew install git node
+```
+
+**Windows:**
+1. Download and install Git: https://git-scm.com/download/win
+2. Download and install Node.js 18+: https://nodejs.org
+
+Verify both are installed:
+```bash
+git --version
+node --version    # should show v18 or higher
+npm --version
+```
+
 ### 1. Clone & Install
 
 ```bash
