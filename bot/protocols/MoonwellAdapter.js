@@ -37,7 +37,12 @@ class MoonwellAdapter {
             fromBlock,
             toBlock: "latest"
         }, 10);
-        // In a real run, we'd use blocksBack
+
+        for (const l of logs) {
+            if (l.topics[1]) {
+                users.add("0x" + l.topics[1].slice(26).toLowerCase());
+            }
+        }
         return Array.from(users);
     }
 

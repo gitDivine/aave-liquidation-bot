@@ -43,6 +43,7 @@ const liquidating = new Set();
 const adapters = [];
 let totalProfit = 0;
 let liquidationCount = 0;
+let isScanning = false;
 
 const log = {
   info: (...m) => console.log(`[${new Date().toISOString()}] ℹ️  `, ...m),
@@ -61,21 +62,30 @@ function initAdapters() {
 
 // ── Main Loop ────────────────────────────────────────────────
 async function scanPositions() {
-  for (const adapter of adapters) {
-    const users = Array.from(watchedUsers.entries()).filter(([_, data]) => data.protocol === adapter.name);
-    for (const [user, data] of users) {
-      try {
-        const updated = await adapter.getUserData(user);
-        watchedUsers.set(user, { ...data, ...updated, lastChecked: Date.now() });
+  if (isScanning) return;
+  isScanning = true;
 
-        // Check for liquidation
-        if (updated.healthFactor < 1.0 && !liquidating.has(user)) {
-          await processLiquidation(user, adapter);
+  try {
+    for (const adapter of adapters) {
+      const users = Array.from(watchedUsers.entries()).filter(([_, data]) => data.protocol === adapter.name);
+      if (users.length === 0) continue;
+
+      log.info(`Scanning ${users.length} users on ${adapter.name}...`);
+      for (const [user, data] of users) {
+        try {
+          const updated = await adapter.getUserData(user);
+          watchedUsers.set(user, { ...data, ...updated, lastChecked: Date.now() });
+
+          if (updated.healthFactor < 1.0 && !liquidating.has(user)) {
+            await processLiquidation(user, adapter);
+          }
+        } catch (e) {
+          // Silent or low-level log
         }
-      } catch (e) {
-        // log.error(`Scan failed for ${user} on ${adapter.name}: ${e.message}`);
       }
     }
+  } finally {
+    isScanning = false;
   }
 }
 
@@ -143,6 +153,8 @@ async function main() {
   }
 
   log.info(`Watchlist seeded with ${watchedUsers.size} users.`);
+  await notify(`🤖 Liquidation Bot Started!\n⛓ Chain: ${CHAIN}\n👁 Watching: ${watchedUsers.size} users`);
+
   setInterval(scanPositions, 15_000);
   scanPositions();
 
