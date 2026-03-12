@@ -8,8 +8,34 @@ async function getLogsChunked(rpcUrls, filter, chunkSize = 1000) {
     const logs = [];
     let currentRpcIndex = 0;
 
-    // Initial provider setup
-    let provider = new ethers.JsonRpcProvider(rpcUrls[currentRpcIndex], undefined, { staticNetwork: true });
+    // Create function to get provider with timeout
+    const getSafeProvider = async (index) => {
+        try {
+            const p = new ethers.JsonRpcProvider(rpcUrls[index], undefined, { staticNetwork: true });
+            // FORCE a network check with a timeout
+            await Promise.race([
+                p.getBlockNumber(),
+                new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 5000))
+            ]);
+            return p;
+        } catch (e) {
+            return null;
+        }
+    };
+
+    let provider = await getSafeProvider(currentRpcIndex);
+
+    // If first one fails, find the first working one
+    while (!provider && currentRpcIndex < rpcUrls.length - 1) {
+        currentRpcIndex++;
+        console.warn(`[Utils] Primary RPC in list failed immediately. Trying ${rpcUrls[currentRpcIndex].split('//')[1]?.split('/')[0]}...`);
+        provider = await getSafeProvider(currentRpcIndex);
+    }
+
+    if (!provider) {
+        console.error("[Utils] CRITICAL: No working RPCs found for seeding.");
+        return { logs: [], lastWorkingRpc: rpcUrls[0] };
+    }
 
     const currentBlock = await provider.getBlockNumber();
     const fromBlock = typeof filter.fromBlock === "number" ? filter.fromBlock : currentBlock - 1000;
@@ -33,20 +59,18 @@ async function getLogsChunked(rpcUrls, filter, chunkSize = 1000) {
                 const msg = e.message || "";
                 const isRetryable = msg.includes("503") || msg.includes("429") || msg.includes("Timeout") || msg.includes("SERVER_ERROR");
 
-                if (isRetryable && attemptsPerRpc < 2) {
+                if (isRetryable && attemptsPerRpc < 1) { // Faster switch
                     attemptsPerRpc++;
-                    const delay = attemptsPerRpc * 1000;
-                    console.warn(`[Utils] Chunk failed [${current}-${end}] on ${rpcUrls[currentRpcIndex].split('//')[1].split('/')[0]}. Retrying in ${delay}ms...`);
-                    await new Promise(r => setTimeout(r, delay));
+                    console.warn(`[Utils] Chunk failed on ${rpcUrls[currentRpcIndex].split('//')[1]?.split('/')[0]}. Retrying once...`);
+                    await new Promise(r => setTimeout(r, 1000));
                 } else {
-                    // Switch RPC
                     currentRpcIndex++;
                     if (currentRpcIndex < rpcUrls.length) {
-                        console.warn(`[Utils] Switching to next RPC: ${rpcUrls[currentRpcIndex].split('//')[1].split('/')[0]} due to persistent failure.`);
-                        provider = new ethers.JsonRpcProvider(rpcUrls[currentRpcIndex], undefined, { staticNetwork: true });
-                        attemptsPerRpc = 0; // Reset attempts for the new RPC
+                        console.warn(`[Utils] Switching to next RPC: ${rpcUrls[currentRpcIndex].split('//')[1]?.split('/')[0]}`);
+                        provider = await getSafeProvider(currentRpcIndex);
+                        if (!provider) continue; // Loop will handle next switch
+                        attemptsPerRpc = 0;
                     } else {
-                        console.error(`[Utils] CRITICAL: All ${rpcUrls.length} RPCs failed for chunk [${current}-${end}]`);
                         break;
                     }
                 }

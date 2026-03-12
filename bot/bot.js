@@ -215,7 +215,10 @@ async function main() {
   log.info(`Starting Multi-Protocol Bot on ${CHAIN}...`);
 
   // Seed watchlist
-  const rpcList = [HTTP_URL, ...PUBLIC_RPCS];
+  const currentRpcUrl = httpProvider.rpcConfig.url;
+  // Ensure the current working RPC is at the front
+  const rpcList = [currentRpcUrl, ...PUBLIC_RPCS.filter(r => r !== currentRpcUrl)];
+
   for (const adapter of adapters) {
     try {
       log.info(`Seeding ${adapter.name} watchlist (scanning last 2000 blocks)...`);
