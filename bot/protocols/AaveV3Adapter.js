@@ -22,7 +22,7 @@ class AaveV3Adapter {
             topics: [borrowTopic],
             fromBlock,
             toBlock: "latest"
-        }, 10);
+        });
 
         for (const l of logs) {
             if (l.topics[2]) {

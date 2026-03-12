@@ -34,7 +34,7 @@ class CompoundV3Adapter {
             topics: [supplyTopic],
             fromBlock,
             toBlock: "latest"
-        }, 10);
+        });
         for (const l of logs) {
             if (l.topics[2]) users.add("0x" + l.topics[2].slice(26).toLowerCase());
         }

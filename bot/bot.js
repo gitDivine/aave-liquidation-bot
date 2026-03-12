@@ -35,6 +35,12 @@ const CONTRACT_ADDR = CONTRACT_ADDRESS;
 const MIN_PROFIT_USD = parseFloat(process.env.MIN_PROFIT_USD || "10");
 const MAX_GAS_GWEI = parseFloat(process.env.MAX_GAS_GWEI || "50");
 
+const PUBLIC_RPCS = [
+  "https://mainnet.base.org",
+  "https://base.publicnode.com",
+  "https://1rpc.io/base"
+];
+
 async function validateRpc() {
   const probe = async (url) => {
     try {
@@ -45,27 +51,34 @@ async function validateRpc() {
       ]);
       return p;
     } catch (err) {
-      log.warn(`Probe failed for ${url.slice(0, 30)}...: ${err.message}`);
+      log.warn(`Probe failed for ${url.split('//')[1]?.split('/')[0] || url}: ${err.message.slice(0, 50)}`);
       return null;
     }
   };
 
-  log.info("Validating RPC connections...");
+  log.info("Validating RPC infrastructure...");
+
+  // 1. Try Primary (Alchemy/User Config)
   const primary = await probe(HTTP_URL);
   if (primary) {
     httpProvider = primary;
     log.success("Primary RPC connected ✓");
-  } else {
-    log.warn("Primary RPC failed or timed out. Switching to public fallback...");
-    httpProvider = new ethers.JsonRpcProvider("https://mainnet.base.org", undefined, { staticNetwork: true });
-    // Verify fallback
-    const fallback = await probe("https://mainnet.base.org");
-    if (!fallback) {
-      log.error("CRITICAL: Public fallback RPC also failed or timed out!");
-    } else {
-      log.success("Public fallback connected ✓");
+    return;
+  }
+
+  // 2. Rotate through Public Fallbacks
+  log.warn("Primary RPC failed. Cycling through public fallbacks...");
+  for (const rpc of PUBLIC_RPCS) {
+    const fallback = await probe(rpc);
+    if (fallback) {
+      httpProvider = fallback;
+      log.success(`Connected to public fallback: ${rpc.split('//')[1]?.split('/')[0]} ✓`);
+      return;
     }
   }
+
+  log.error("CRITICAL: All RPC providers failed. Retrying with first public node anyway...");
+  httpProvider = new ethers.JsonRpcProvider(PUBLIC_RPCS[0], undefined, { staticNetwork: true });
 }
 
 let wallet;
