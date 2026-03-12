@@ -8,8 +8,8 @@ const CHAINS = {
     name: "Base",
     chainId: 8453,
     aavePool: "0xA238Dd80C259a72e81d7e4664a9801593F98d1c5",
-    uiDataProvider: "0x5c5228aC8BC1528482514af3e27E692495148717",
-    swapRouter: "0x2626664c2603336E57B271c5C0b26F421741e481",
+    uiDataProvider: "0x5c5228aC8BC1528482514aF3e27E692495148717",
+    swapRouter: "0x2626664C2603336E57B271c5C0b26F421741e481",
     // Common tokens on Base
     tokens: {
       USDC: { address: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", decimals: 6 },
@@ -28,7 +28,7 @@ const CHAINS = {
     name: "Arbitrum One",
     chainId: 42161,
     aavePool: "0x794a61358D6845594F94dc1DB02A252b5b4814aD",
-    uiDataProvider: "0x145dE30c929a065582da84Cf96F88460dB9C4b9",
+    uiDataProvider: "0x69fa688f395726Bcc5019a2e37dC1aA3f8C95483",
     swapRouter: "0xE592427A0AEce92De3Edee1F18E0157C05861564",
     tokens: {
       USDC: { address: "0xaf88d065e77c8cC2239327C5EDb3A432268e5831", decimals: 6 },
@@ -47,7 +47,7 @@ const CHAINS = {
     name: "Polygon",
     chainId: 137,
     aavePool: "0x794a61358D6845594F94dc1DB02A252b5b4814aD",
-    uiDataProvider: "0xC69728f11E9E6127733751c8a3AA03E27571C99C",
+    uiDataProvider: "0xC69728F11E9e6127733751C8A3Aa03E27571C99C",
     swapRouter: "0xE592427A0AEce92De3Edee1F18E0157C05861564",
     tokens: {
       USDC: { address: "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174", decimals: 6 },
@@ -94,16 +94,16 @@ const PROTOCOLS = {
   },
   compoundV3: {
     name: "Compound V3",
-    comet: "0xb12c13f66AdE1F72f6d548316888c7f99056d688",
+    comet: "0xB12c13F66ade1f72F6d548316888c7F99056D688",
     type: 1 // COMPOUND_V3
   },
   moonwell: {
     name: "Moonwell",
-    comptroller: "0xfbb213017A640c9789748671c35D396348fAFeCc",
+    comptroller: "0xfBB213017a640c9789748671c35d396348FAfECC",
     type: 2, // MOONWELL
     mTokens: {
-      USDC: "0xEdc90193F915788d5C05896029e979327d911195",
-      WETH: "0x62839996Efa9d324C051383F5726266D03045bcD",
+      USDC: "0xeDc90193f915788d5C05896029E979327D911195",
+      WETH: "0x62839996EfA9d324C051383f5726266D03045bCD",
     }
   }
 };
