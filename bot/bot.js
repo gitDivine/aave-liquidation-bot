@@ -219,9 +219,8 @@ async function main() {
   log.info(`Starting Multi-Protocol Bot on ${CHAIN}...`);
 
   // Seed watchlist
-  const currentRpcUrl = httpProvider.rpcConfig.url;
   // Ensure the current working RPC is at the front
-  const rpcList = [currentRpcUrl, ...PUBLIC_RPCS.filter(r => r !== currentRpcUrl)];
+  const rpcList = [workingRpcUrl, ...PUBLIC_RPCS.filter(r => r !== workingRpcUrl)];
 
   for (const adapter of adapters) {
     try {
@@ -229,9 +228,10 @@ async function main() {
       const { users, lastWorkingRpc } = await adapter.getWatchlistSeed(rpcList, 2000);
 
       // Update global provider if adapter switched to a better RPC
-      if (lastWorkingRpc && lastWorkingRpc !== httpProvider.rpcConfig.url) {
+      if (lastWorkingRpc && lastWorkingRpc !== workingRpcUrl) {
         log.info(`Updating global provider to: ${lastWorkingRpc.split('//')[1].split('/')[0]}`);
-        httpProvider = new ethers.JsonRpcProvider(lastWorkingRpc, undefined, { staticNetwork: true });
+        workingRpcUrl = lastWorkingRpc;
+        httpProvider = new ethers.JsonRpcProvider(workingRpcUrl, undefined, { staticNetwork: true });
         wallet = new ethers.Wallet(PRIVATE_KEY, httpProvider);
         botContract = new ethers.Contract(CONTRACT_ADDR, BOT_CONTRACT_ABI, wallet);
       }
