@@ -1,4 +1,5 @@
 const { ethers } = require("ethers");
+const { AAVE_POOL_ABI, ERC20_ABI } = require("../config");
 const { getLogsChunked } = require("../utils");
 
 class AaveV3Adapter {

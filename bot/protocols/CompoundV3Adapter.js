@@ -1,4 +1,5 @@
 const { ethers } = require("ethers");
+const { ERC20_ABI } = require("../config");
 const { getLogsChunked } = require("../utils");
 
 const COMET_ABI = [
