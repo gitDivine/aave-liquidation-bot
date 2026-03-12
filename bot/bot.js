@@ -35,15 +35,35 @@ const CONTRACT_ADDR = CONTRACT_ADDRESS;
 const MIN_PROFIT_USD = parseFloat(process.env.MIN_PROFIT_USD || "10");
 const MAX_GAS_GWEI = parseFloat(process.env.MAX_GAS_GWEI || "50");
 
-let httpProvider = new ethers.JsonRpcProvider(HTTP_URL, undefined, { staticNetwork: true });
-
 async function validateRpc() {
-  try {
-    await httpProvider.getNetwork();
-  } catch (err) {
-    if (err.message.includes("429") || err.message.includes("limit exceeded") || err.message.includes("network")) {
-      log.warn("Primary RPC failed or limited. Switching to public Base node...");
-      httpProvider = new ethers.JsonRpcProvider("https://mainnet.base.org", undefined, { staticNetwork: true });
+  const probe = async (url) => {
+    try {
+      const p = new ethers.JsonRpcProvider(url, undefined, { staticNetwork: true });
+      await Promise.race([
+        p.getNetwork(),
+        new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 5000))
+      ]);
+      return p;
+    } catch (err) {
+      log.warn(`Probe failed for ${url.slice(0, 30)}...: ${err.message}`);
+      return null;
+    }
+  };
+
+  log.info("Validating RPC connections...");
+  const primary = await probe(HTTP_URL);
+  if (primary) {
+    httpProvider = primary;
+    log.success("Primary RPC connected ✓");
+  } else {
+    log.warn("Primary RPC failed or timed out. Switching to public fallback...");
+    httpProvider = new ethers.JsonRpcProvider("https://mainnet.base.org", undefined, { staticNetwork: true });
+    // Verify fallback
+    const fallback = await probe("https://mainnet.base.org");
+    if (!fallback) {
+      log.error("CRITICAL: Public fallback RPC also failed or timed out!");
+    } else {
+      log.success("Public fallback connected ✓");
     }
   }
 }
@@ -56,6 +76,25 @@ async function setupWallet() {
   wallet = new ethers.Wallet(PRIVATE_KEY, httpProvider);
   botContract = new ethers.Contract(CONTRACT_ADDR, BOT_CONTRACT_ABI, wallet);
 }
+
+// ── Global Error Handlers ────────────────────────────────────
+process.on("unhandledRejection", (reason) => {
+  const msg = reason?.message || String(reason);
+  if (msg.includes("429") || msg.includes("limit exceeded")) {
+    log.error(`RPC 429 detected (Rejection). PM2 will restart.`);
+    process.exit(1);
+  }
+  log.error("Unhandled Rejection:", reason);
+});
+
+process.on("uncaughtException", (err) => {
+  if (err.message.includes("429") || err.message.includes("limit exceeded")) {
+    log.error(`RPC 429 detected (Exception). PM2 will restart.`);
+    process.exit(1);
+  }
+  log.error("Uncaught Exception:", err);
+  process.exit(1);
+});
 
 // ── State ────────────────────────────────────────────────────
 const watchedUsers = new Map(); // address → { hf, debt, collateral, protocol }
@@ -164,17 +203,24 @@ async function main() {
 
   // Seed watchlist
   for (const adapter of adapters) {
-    log.info(`Seeding ${adapter.name}...`);
-    const historical = await adapter.getWatchlistSeed(2000);
-    for (const user of historical) {
-      const key = `${adapter.name}:${user}`;
-      if (!watchedUsers.has(key)) {
-        watchedUsers.set(key, { protocol: adapter.name, address: user, lastChecked: 0 });
+    try {
+      log.info(`Seeding ${adapter.name} watchlist (scanning last 2000 blocks)...`);
+      const historical = await adapter.getWatchlistSeed(2000);
+      let count = 0;
+      for (const user of historical) {
+        const key = `${adapter.name}:${user}`;
+        if (!watchedUsers.has(key)) {
+          watchedUsers.set(key, { protocol: adapter.name, address: user, lastChecked: 0 });
+          count++;
+        }
       }
+      log.success(`Seeded ${count} new users from ${adapter.name}.`);
+    } catch (err) {
+      log.warn(`Seeding failed for ${adapter.name}: ${err.message}`);
     }
   }
 
-  log.info(`Watchlist seeded with ${watchedUsers.size} users.`);
+  log.info(`Final Watchlist: ${watchedUsers.size} users across all protocols.`);
   await notify(`🤖 Liquidation Bot Started!\n⛓ Chain: ${CHAIN}\n👁 Watching: ${watchedUsers.size} users`);
 
   setInterval(scanPositions, 60_000);

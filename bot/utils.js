@@ -3,11 +3,11 @@ const { ethers } = require("ethers");
 /**
  * Fetches logs in small chunks to avoid RPC limits (e.g. Alchemy's 10-block limit on Base Free Tier)
  */
-async function getLogsChunked(provider, filter, chunkSize = 10) {
+async function getLogsChunked(provider, filter, chunkSize = 1000) {
     const logs = [];
     const currentBlock = await provider.getBlockNumber();
-    const fromBlock = filter.fromBlock === "latest" ? currentBlock : filter.fromBlock;
-    const toBlock = filter.toBlock === "latest" ? currentBlock : filter.toBlock;
+    const fromBlock = typeof filter.fromBlock === "number" ? filter.fromBlock : currentBlock - 1000;
+    const toBlock = typeof filter.toBlock === "number" ? filter.toBlock : currentBlock;
 
     for (let current = fromBlock; current < toBlock; current += chunkSize) {
         const end = Math.min(current + chunkSize - 1, toBlock);
