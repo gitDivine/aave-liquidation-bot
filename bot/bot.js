@@ -156,7 +156,7 @@ async function main() {
   log.info(`Watchlist seeded with ${watchedUsers.size} users.`);
   await notify(`🤖 Liquidation Bot Started!\n⛓ Chain: ${CHAIN}\n👁 Watching: ${watchedUsers.size} users`);
 
-  setInterval(scanPositions, 15_000);
+  setInterval(scanPositions, 60_000);
   scanPositions();
 
   // ── Hourly Telegram heartbeat + 10-min update checks ──
