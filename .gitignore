@@ -17,3 +17,7 @@ build/
 dist/
 artifacts/
 cache/
+
+# Logs
+*.log
+liquidation.log
