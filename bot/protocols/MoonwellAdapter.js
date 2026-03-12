@@ -1,5 +1,5 @@
 const { ethers } = require("ethers");
-const { ERC20_ABI } = require("../config");
+const { getLogsChunked } = require("../utils");
 
 const COMPTROLLER_ABI = [
     "function getAccountLiquidity(address account) external view returns (uint, uint, uint)",
@@ -19,19 +19,23 @@ class MoonwellAdapter {
         this.config = config;
         this.contract = new ethers.Contract(config.comptroller, COMPTROLLER_ABI, provider);
         this.type = config.type;
+        this.name = config.name;
     }
 
-    async getWatchlistSeed(blocksBack = 5000) {
+    async getWatchlistSeed(blocksBack = 1000) {
         // Moonwell stores users in Comptroller or we scan mToken Borrows
         const users = new Set();
         const mUSDC = this.config.mTokens.USDC;
         const borrowTopic = ethers.id("Borrow(address,uint256,uint256,uint256)");
-        const logs = await this.provider.getLogs({
+        const currentBlock = await this.provider.getBlockNumber();
+        const fromBlock = currentBlock - blocksBack;
+
+        const logs = await getLogsChunked(this.provider, {
             address: mUSDC,
             topics: [borrowTopic],
-            fromBlock: "latest", // Simplified for now
+            fromBlock,
             toBlock: "latest"
-        });
+        }, 10);
         // In a real run, we'd use blocksBack
         return Array.from(users);
     }

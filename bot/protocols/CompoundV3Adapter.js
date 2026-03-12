@@ -1,5 +1,5 @@
 const { ethers } = require("ethers");
-const { ERC20_ABI } = require("../config");
+const { getLogsChunked } = require("../utils");
 
 const COMET_ABI = [
     "function absorb(address[] calldata accounts) external",
@@ -18,21 +18,22 @@ class CompoundV3Adapter {
         this.config = config;
         this.contract = new ethers.Contract(config.comet, COMET_ABI, provider);
         this.type = config.type;
+        this.name = config.name;
     }
 
-    async getWatchlistSeed(blocksBack = 5000) {
+    async getWatchlistSeed(blocksBack = 1000) {
         const currentBlock = await this.provider.getBlockNumber();
         const fromBlock = currentBlock - blocksBack;
         // Listen to AbsorbDebt to find active users or just scan recent interactions
         // In Compound V3, its better to listen to 'Supply' events
         const supplyTopic = ethers.id("Supply(address,address,uint256)");
         const users = new Set();
-        const logs = await this.provider.getLogs({
+        const logs = await getLogsChunked(this.provider, {
             address: this.config.comet,
             topics: [supplyTopic],
             fromBlock,
             toBlock: "latest"
-        });
+        }, 10);
         for (const l of logs) {
             if (l.topics[2]) users.add("0x" + l.topics[2].slice(26).toLowerCase());
         }

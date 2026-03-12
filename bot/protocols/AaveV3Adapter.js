@@ -1,5 +1,5 @@
 const { ethers } = require("ethers");
-const { AAVE_POOL_ABI, ERC20_ABI } = require("../config");
+const { getLogsChunked } = require("../utils");
 
 class AaveV3Adapter {
     constructor(provider, config) {
@@ -7,20 +7,21 @@ class AaveV3Adapter {
         this.config = config;
         this.contract = new ethers.Contract(config.poolAddress, AAVE_POOL_ABI, provider);
         this.type = config.type;
+        this.name = config.name;
     }
 
-    async getWatchlistSeed(blocksBack = 5000) {
+    async getWatchlistSeed(blocksBack = 1000) {
         const currentBlock = await this.provider.getBlockNumber();
         const fromBlock = currentBlock - blocksBack;
         const borrowTopic = ethers.id("Borrow(address,address,address,uint256,uint8,uint256,uint16)");
         const users = new Set();
 
-        const logs = await this.provider.getLogs({
+        const logs = await getLogsChunked(this.provider, {
             address: this.config.poolAddress,
             topics: [borrowTopic],
             fromBlock,
             toBlock: "latest"
-        });
+        }, 10);
 
         for (const l of logs) {
             if (l.topics[2]) {
