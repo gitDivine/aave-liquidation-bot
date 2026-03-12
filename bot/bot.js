@@ -71,13 +71,13 @@ async function scanPositions() {
       if (users.length === 0) continue;
 
       log.info(`Scanning ${users.length} users on ${adapter.name}...`);
-      for (const [user, data] of users) {
+      for (const [key, data] of users) {
         try {
-          const updated = await adapter.getUserData(user);
-          watchedUsers.set(user, { ...data, ...updated, lastChecked: Date.now() });
+          const updated = await adapter.getUserData(data.address);
+          watchedUsers.set(key, { ...data, ...updated, lastChecked: Date.now() });
 
-          if (updated.healthFactor < 1.0 && !liquidating.has(user)) {
-            await processLiquidation(user, adapter);
+          if (updated.healthFactor < 1.0 && !liquidating.has(data.address)) {
+            await processLiquidation(data.address, adapter);
           }
         } catch (e) {
           // Silent or low-level log
@@ -146,8 +146,9 @@ async function main() {
     log.info(`Seeding ${adapter.name}...`);
     const historical = await adapter.getWatchlistSeed(2000);
     for (const user of historical) {
-      if (!watchedUsers.has(user)) {
-        watchedUsers.set(user, { protocol: adapter.name, lastChecked: 0 });
+      const key = `${adapter.name}:${user}`;
+      if (!watchedUsers.has(key)) {
+        watchedUsers.set(key, { protocol: adapter.name, address: user, lastChecked: 0 });
       }
     }
   }
