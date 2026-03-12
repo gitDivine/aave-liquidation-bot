@@ -33,9 +33,27 @@ const CONTRACT_ADDR = CONTRACT_ADDRESS;
 const MIN_PROFIT_USD = parseFloat(process.env.MIN_PROFIT_USD || "10");
 const MAX_GAS_GWEI = parseFloat(process.env.MAX_GAS_GWEI || "50");
 
-const httpProvider = new ethers.JsonRpcProvider(HTTP_URL);
-const wallet = new ethers.Wallet(PRIVATE_KEY, httpProvider);
-const botContract = new ethers.Contract(CONTRACT_ADDR, BOT_CONTRACT_ABI, wallet);
+let httpProvider = new ethers.JsonRpcProvider(HTTP_URL, undefined, { staticNetwork: true });
+
+async function validateRpc() {
+  try {
+    await httpProvider.getNetwork();
+  } catch (err) {
+    if (err.message.includes("429") || err.message.includes("limit exceeded") || err.message.includes("network")) {
+      log.warn("Primary RPC failed or limited. Switching to public Base node...");
+      httpProvider = new ethers.JsonRpcProvider("https://mainnet.base.org", undefined, { staticNetwork: true });
+    }
+  }
+}
+
+let wallet;
+let botContract;
+
+async function setupWallet() {
+  await validateRpc();
+  wallet = new ethers.Wallet(PRIVATE_KEY, httpProvider);
+  botContract = new ethers.Contract(CONTRACT_ADDR, BOT_CONTRACT_ABI, wallet);
+}
 
 // ── State ────────────────────────────────────────────────────
 const watchedUsers = new Map(); // address → { hf, debt, collateral, protocol }
@@ -138,6 +156,7 @@ async function notify(message) {
 }
 
 async function main() {
+  await setupWallet();
   initAdapters();
   log.info(`Starting Multi-Protocol Bot on ${CHAIN}...`);
 
