@@ -23,15 +23,13 @@ class MoonwellAdapter {
         this.name = config.name;
     }
 
-    async getWatchlistSeed(blocksBack = 1000) {
-        // Moonwell stores users in Comptroller or we scan mToken Borrows
+    async getWatchlistSeed(rpcUrls, blocksBack = 1000) {
         const users = new Set();
         const mUSDC = this.config.mTokens.USDC;
         const borrowTopic = ethers.id("Borrow(address,uint256,uint256,uint256)");
-        const currentBlock = await this.provider.getBlockNumber();
-        const fromBlock = currentBlock - blocksBack;
+        const fromBlock = (await this.provider.getBlockNumber()) - blocksBack;
 
-        const logs = await getLogsChunked(this.provider, {
+        const { logs, lastWorkingRpc } = await getLogsChunked(rpcUrls, {
             address: mUSDC,
             topics: [borrowTopic],
             fromBlock,
@@ -43,7 +41,10 @@ class MoonwellAdapter {
                 users.add("0x" + l.topics[1].slice(26).toLowerCase());
             }
         }
-        return Array.from(users);
+        return {
+            users: Array.from(users),
+            lastWorkingRpc
+        };
     }
 
     async getUserData(user) {

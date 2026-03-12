@@ -22,23 +22,25 @@ class CompoundV3Adapter {
         this.name = config.name;
     }
 
-    async getWatchlistSeed(blocksBack = 1000) {
-        const currentBlock = await this.provider.getBlockNumber();
-        const fromBlock = currentBlock - blocksBack;
-        // Listen to AbsorbDebt to find active users or just scan recent interactions
-        // In Compound V3, its better to listen to 'Supply' events
+    async getWatchlistSeed(rpcUrls, blocksBack = 1000) {
+        const fromBlock = (await this.provider.getBlockNumber()) - blocksBack;
         const supplyTopic = ethers.id("Supply(address,address,uint256)");
         const users = new Set();
-        const logs = await getLogsChunked(this.provider, {
+
+        const { logs, lastWorkingRpc } = await getLogsChunked(rpcUrls, {
             address: this.config.comet,
             topics: [supplyTopic],
             fromBlock,
             toBlock: "latest"
         });
+
         for (const l of logs) {
             if (l.topics[2]) users.add("0x" + l.topics[2].slice(26).toLowerCase());
         }
-        return Array.from(users);
+        return {
+            users: Array.from(users),
+            lastWorkingRpc
+        };
     }
 
     async getUserData(user) {

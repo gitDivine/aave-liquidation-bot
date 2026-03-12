@@ -11,13 +11,12 @@ class AaveV3Adapter {
         this.name = config.name;
     }
 
-    async getWatchlistSeed(blocksBack = 1000) {
-        const currentBlock = await this.provider.getBlockNumber();
-        const fromBlock = currentBlock - blocksBack;
+    async getWatchlistSeed(rpcUrls, blocksBack = 1000) {
+        const fromBlock = (await this.provider.getBlockNumber()) - blocksBack;
         const borrowTopic = ethers.id("Borrow(address,address,address,uint256,uint8,uint256,uint16)");
         const users = new Set();
 
-        const logs = await getLogsChunked(this.provider, {
+        const { logs, lastWorkingRpc } = await getLogsChunked(rpcUrls, {
             address: this.config.poolAddress,
             topics: [borrowTopic],
             fromBlock,
@@ -29,7 +28,10 @@ class AaveV3Adapter {
                 users.add("0x" + l.topics[2].slice(26).toLowerCase());
             }
         }
-        return Array.from(users);
+        return {
+            users: Array.from(users),
+            lastWorkingRpc
+        };
     }
 
     async getUserData(user) {

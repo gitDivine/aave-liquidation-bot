@@ -215,12 +215,22 @@ async function main() {
   log.info(`Starting Multi-Protocol Bot on ${CHAIN}...`);
 
   // Seed watchlist
+  const rpcList = [HTTP_URL, ...PUBLIC_RPCS];
   for (const adapter of adapters) {
     try {
       log.info(`Seeding ${adapter.name} watchlist (scanning last 2000 blocks)...`);
-      const historical = await adapter.getWatchlistSeed(2000);
+      const { users, lastWorkingRpc } = await adapter.getWatchlistSeed(rpcList, 2000);
+
+      // Update global provider if adapter switched to a better RPC
+      if (lastWorkingRpc && lastWorkingRpc !== httpProvider.rpcConfig.url) {
+        log.info(`Updating global provider to: ${lastWorkingRpc.split('//')[1].split('/')[0]}`);
+        httpProvider = new ethers.JsonRpcProvider(lastWorkingRpc, undefined, { staticNetwork: true });
+        wallet = new ethers.Wallet(PRIVATE_KEY, httpProvider);
+        botContract = new ethers.Contract(CONTRACT_ADDR, BOT_CONTRACT_ABI, wallet);
+      }
+
       let count = 0;
-      for (const user of historical) {
+      for (const user of users) {
         const key = `${adapter.name}:${user}`;
         if (!watchedUsers.has(key)) {
           watchedUsers.set(key, { protocol: adapter.name, address: user, lastChecked: 0 });
@@ -259,14 +269,16 @@ async function main() {
 
     // 240 ticks × 15s = 1 hour — Telegram heartbeat
     if (heartbeatTick % 240 === 0) {
-      const currentBal = await httpProvider.getBalance(wallet.address);
-      await notify(
-        `💓 Liquidation Bot Alive\n` +
-        `⏱ Uptime: ${Math.floor(heartbeatTick / 240)}h\n` +
-        `👁 Watching: ${watchedUsers.size} users\n` +
-        `💰 Successes: ${liquidationCount}\n` +
-        `🔋 ETH: ${parseFloat(ethers.formatEther(currentBal)).toFixed(4)}`
-      );
+      try {
+        const currentBal = await httpProvider.getBalance(wallet.address);
+        await notify(
+          `💓 Liquidation Bot Alive\n` +
+          `⏱ Uptime: ${Math.floor(heartbeatTick / 240)}h\n` +
+          `👁 Watching: ${watchedUsers.size} users\n` +
+          `💰 Successes: ${liquidationCount}\n` +
+          `🔋 ETH: ${parseFloat(ethers.formatEther(currentBal)).toFixed(4)}`
+        );
+      } catch { }
     }
   }, 15_000);
 }
