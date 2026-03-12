@@ -1,24 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-// ============================================================
-//  AAVE V3 LIQUIDATION BOT — SMART CONTRACT
-//  Deploys on: Base, Arbitrum, Polygon
-//  Author: Your Liquidation Bot
-// ============================================================
-//
-//  HOW THIS CONTRACT WORKS:
-//  1. Your off-chain bot detects an undercollateralized position
-//  2. Bot calls execute() on this contract with target details
-//  3. Contract requests a flash loan from Aave
-//  4. In executeOperation(), contract liquidates the target position
-//  5. Contract swaps received collateral back to debt token via Uniswap V3
-//  6. Contract repays flash loan + 0.05% fee
-//  7. Profit stays in contract — you withdraw anytime via withdraw()
-//
-// ============================================================
-
-// ── Minimal Interfaces (no imports needed — self-contained) ──
+/**
+ * @title LiquidationBot
+ * @notice Multi-protocol liquidation bot using Aave V3 Flash Loans.
+ * Supports: Aave V3, Compound V3, Moonwell.
+ */
 
 interface IERC20 {
     function approve(address spender, uint256 amount) external returns (bool);
@@ -28,239 +15,168 @@ interface IERC20 {
 }
 
 interface IPool {
-    function flashLoanSimple(
-        address receiverAddress,
-        address asset,
-        uint256 amount,
-        bytes calldata params,
-        uint16 referralCode
-    ) external;
+    function flashLoanSimple(address receiverAddress, address asset, uint256 amount, bytes calldata params, uint16 referralCode) external;
+    function liquidationCall(address collateralAsset, address debtAsset, address user, uint256 debtToCover, bool receiveAToken) external;
+}
 
-    function liquidationCall(
-        address collateralAsset,
-        address debtAsset,
-        address user,
-        uint256 debtToCover,
-        bool receiveAToken
-    ) external;
+interface IComet {
+    function absorb(address[] calldata accounts) external;
+    function buyCollateral(address asset, uint minAmount, uint baseAmount, address recipient) external;
+    function baseToken() external view returns (address);
+}
 
-    function getUserAccountData(address user)
-        external
-        view
-        returns (
-            uint256 totalCollateralBase,
-            uint256 totalDebtBase,
-            uint256 availableBorrowsBase,
-            uint256 currentLiquidationThreshold,
-            uint256 ltv,
-            uint256 healthFactor
-        );
+interface IComptroller {
+    function liquidateBorrow(address borrower, uint repayAmount, address cTokenCollateral) external returns (uint);
+}
+
+interface ICToken {
+    function redeem(uint redeemTokens) external returns (uint);
+    function balanceOf(address owner) external view returns (uint);
+    function underlying() external view returns (address);
 }
 
 interface ISwapRouter {
     struct ExactInputSingleParams {
-        address tokenIn;
-        address tokenOut;
-        uint24 fee;
+        address tokenIn; 
+        address tokenOut; 
+        uint24 fee; 
         address recipient;
-        uint256 deadline;
-        uint256 amountIn;
-        uint256 amountOutMinimum;
+        uint256 deadline; 
+        uint256 amountIn; 
+        uint256 amountOutMinimum; 
         uint160 sqrtPriceLimitX96;
     }
-    function exactInputSingle(ExactInputSingleParams calldata params)
-        external
-        returns (uint256 amountOut);
+    function exactInputSingle(ExactInputSingleParams calldata params) external returns (uint256 amountOut);
 }
 
-// ── Main Contract ──────────────────────────────────────────
-
 contract LiquidationBot {
-
-    // ── State ─────────────────────────────────────────────
+    // --- State Variables ---
     address public owner;
-    IPool   public immutable aavePool;
+    IPool public immutable aavePool;
     ISwapRouter public immutable swapRouter;
 
-    // Uniswap V3 pool fee tiers (try 0.05% first, fallback to 0.3%)
-    uint24 public constant POOL_FEE_LOW    = 500;   // 0.05%
-    uint24 public constant POOL_FEE_MEDIUM = 3000;  // 0.30%
-    uint24 public constant POOL_FEE_HIGH   = 10000; // 1.00%
+    enum ProtocolType { AAVE_V3, COMPOUND_V3, MOONWELL }
 
-    // ── Events ────────────────────────────────────────────
-    event LiquidationExecuted(
-        address indexed user,
-        address collateralAsset,
-        address debtAsset,
-        uint256 debtCovered,
-        uint256 profit
-    );
-    event Withdrawn(address token, uint256 amount);
+    struct FlashParams {
+        address collateralAsset;
+        address userToLiquidate;
+        uint24 poolFee;
+        ProtocolType protocol;
+        address protocolAddress;
+    }
 
-    // ── Modifiers ─────────────────────────────────────────
+    // --- Events ---
+    event LiquidationExecuted(address indexed user, address collat, address debt, uint256 profit, ProtocolType protocol);
+
+    // --- Modifiers ---
     modifier onlyOwner() {
         require(msg.sender == owner, "Not owner");
         _;
     }
 
-    // ── Constructor ───────────────────────────────────────
-    // Pass the Aave Pool address and Uniswap SwapRouter address for your chain
-    // Base:     Aave = 0xA238Dd80C259a72e81d7e4664a9801593F98d1c5
-    //           Uniswap = 0x2626664c2603336E57B271c5C0b26F421741e481
-    // Arbitrum: Aave = 0x794a61358D6845594F94dc1DB02A252b5b4814aD
-    //           Uniswap = 0xE592427A0AEce92De3Edee1F18E0157C05861564
-    // Polygon:  Aave = 0x794a61358D6845594F94dc1DB02A252b5b4814aD
-    //           Uniswap = 0xE592427A0AEce92De3Edee1F18E0157C05861564
+    // --- Constructor ---
     constructor(address _aavePool, address _swapRouter) {
-        owner      = msg.sender;
-        aavePool   = IPool(_aavePool);
+        owner = msg.sender;
+        aavePool = IPool(_aavePool);
         swapRouter = ISwapRouter(_swapRouter);
     }
 
-    // Struct to pack our flash loan parameters to avoid "Stack too deep"
-    struct FlashParams {
-        address collateralAsset;
-        address userToLiquidate;
-        uint24 poolFee;
-    }
-
-    // ── ENTRY POINT — called by your off-chain bot ────────
-    // @param collateralAsset  The token you will RECEIVE as liquidation bonus
-    // @param debtAsset        The token you need to REPAY (flash loan this)
-    // @param userToLiquidate  The underwater wallet address
-    // @param debtToCover      Amount of debt to repay (use 0 for maximum = 50%)
-    // @param poolFee          Uniswap pool fee: 500, 3000, or 10000
+    // --- Entry Point ---
     function execute(
         address collateralAsset,
         address debtAsset,
         address userToLiquidate,
         uint256 debtToCover,
-        uint24  poolFee
+        uint24 poolFee,
+        ProtocolType protocol,
+        address protocolAddress
     ) external onlyOwner {
-        // Pack all params to pass through the flash loan callback
-        bytes memory params = abi.encode(
-            FlashParams({
-                collateralAsset: collateralAsset,
-                userToLiquidate: userToLiquidate,
-                poolFee: poolFee
-            })
-        );
+        bytes memory params = abi.encode(FlashParams({
+            collateralAsset: collateralAsset,
+            userToLiquidate: userToLiquidate,
+            poolFee: poolFee,
+            protocol: protocol,
+            protocolAddress: protocolAddress
+        }));
 
-        // Request flash loan of the debt asset from Aave
-        // Aave sends funds → calls executeOperation() → expects repayment
-        aavePool.flashLoanSimple(
-            address(this),   // receiver = this contract
-            debtAsset,       // asset to borrow
-            debtToCover,     // amount to borrow
-            params,          // data passed to executeOperation
-            0                // referral code (0 = none)
-        );
+        aavePool.flashLoanSimple(address(this), debtAsset, debtToCover, params, 0);
     }
 
-    // ── FLASH LOAN CALLBACK — called by Aave ─────────────
-    // Aave calls this automatically after sending the flash loan funds
-    // MUST repay (amount + premium) before this function returns
+    // --- Flash Loan Callback ---
     function executeOperation(
-        address asset,         // the debt token we borrowed
-        uint256 amount,        // how much we borrowed
-        uint256 premium,       // flash loan fee (0.05%)
-        address,               // initiator (unused)
-        bytes calldata params  // our packed data
+        address asset,
+        uint256 amount,
+        uint256 premium,
+        address initiator, // Named parameter to avoid ambiguity
+        bytes calldata params
     ) external returns (bool) {
-        // Only Aave pool can call this
-        require(msg.sender == address(aavePool), "Caller not Aave Pool");
+        require(msg.sender == address(aavePool), "Untrusted");
+        require(initiator == address(this), "Foreign FlashLoan");
 
-        // Unpack our parameters directly into memory struct to save stack space
         FlashParams memory decoded = abi.decode(params, (FlashParams));
+        uint256 amountOwed = amount + premium;
 
-        // ── Step 1: Approve Aave to take the debt repayment ──
-        IERC20(asset).approve(address(aavePool), amount);
+        // --- Step 1: Protocol Specific Liquidation ---
+        IERC20(asset).approve(decoded.protocolAddress, amount);
 
-        // ── Step 2: Liquidate the unhealthy position ──────────
-        // We repay their debt, we receive their collateral at a discount
-        aavePool.liquidationCall(
-            decoded.collateralAsset,   // collateral we want to receive
-            asset,                     // debt token we are repaying
-            decoded.userToLiquidate,   // the user being liquidated
-            amount,                    // repay the full flash loan amount
-            false                      // false = receive underlying token (not aToken)
-        );
-
-        // ── Step 3: Swap received collateral → debt token ────
-        uint256 amountOwed = amount + premium; // repay loan + fee
-
-        if (decoded.collateralAsset != asset) {
-            uint256 collateralBalance = IERC20(decoded.collateralAsset).balanceOf(address(this));
-            
-            // Approve Uniswap to spend our collateral
-            IERC20(decoded.collateralAsset).approve(address(swapRouter), collateralBalance);
-
-            // Swap collateral for debt token
-            // amountOutMinimum = amountOwed ensures we at least break even
-            ISwapRouter.ExactInputSingleParams memory swapParams =
-                ISwapRouter.ExactInputSingleParams({
-                    tokenIn:           decoded.collateralAsset,
-                    tokenOut:          asset,
-                    fee:               decoded.poolFee,
-                    recipient:         address(this),
-                    deadline:          block.timestamp + 300, // 5 min max
-                    amountIn:          collateralBalance,
-                    amountOutMinimum:  amountOwed,           // slippage protection
-                    sqrtPriceLimitX96: 0
-                });
-
-            swapRouter.exactInputSingle(swapParams);
+        if (decoded.protocol == ProtocolType.AAVE_V3) {
+            aavePool.liquidationCall(decoded.collateralAsset, asset, decoded.userToLiquidate, amount, false);
+        } 
+        else if (decoded.protocol == ProtocolType.COMPOUND_V3) {
+            address[] memory users = new address[](1);
+            users[0] = decoded.userToLiquidate;
+            IComet(decoded.protocolAddress).absorb(users);
+            IComet(decoded.protocolAddress).buyCollateral(decoded.collateralAsset, 0, amount, address(this));
+        }
+        else if (decoded.protocol == ProtocolType.MOONWELL) {
+            IComptroller(decoded.protocolAddress).liquidateBorrow(decoded.userToLiquidate, amount, decoded.collateralAsset);
+            uint256 cBal = ICToken(decoded.collateralAsset).balanceOf(address(this));
+            ICToken(decoded.collateralAsset).redeem(cBal);
         }
 
-        // ── Step 4: Approve Aave to pull back loan + fee ─────
-        uint256 debtBalance = IERC20(asset).balanceOf(address(this));
-        require(debtBalance >= amountOwed, "Insufficient funds to repay");
-        
-        // Approve aavePool to pull the specific amount owed
+        // --- Step 2: Extract Net Collateral ---
+        address actualCollateral = (decoded.protocol == ProtocolType.MOONWELL) 
+            ? ICToken(decoded.collateralAsset).underlying() 
+            : decoded.collateralAsset;
+
+        // --- Step 3: Swap back to clear debt ---
+        if (actualCollateral != asset) {
+            uint256 bal = IERC20(actualCollateral).balanceOf(address(this));
+            IERC20(actualCollateral).approve(address(swapRouter), bal);
+            
+            swapRouter.exactInputSingle(ISwapRouter.ExactInputSingleParams({
+                tokenIn: actualCollateral,
+                tokenOut: asset,
+                fee: decoded.poolFee,
+                recipient: address(this),
+                deadline: block.timestamp + 300,
+                amountIn: bal,
+                amountOutMinimum: amountOwed,
+                sqrtPriceLimitX96: 0
+            }));
+        }
+
+        // --- Step 4: Final Repayment Check ---
+        uint256 finalBal = IERC20(asset).balanceOf(address(this));
+        require(finalBal >= amountOwed, "Insolvent");
         IERC20(asset).approve(address(aavePool), amountOwed);
 
-        // Calculate profit for the event log
-        uint256 profit = debtBalance - amountOwed;
-
-        emit LiquidationExecuted(
-            decoded.userToLiquidate,
-            decoded.collateralAsset,
-            asset,
-            amount,
-            profit
-        );
-
-        return true; // Aave pulls repayment automatically after this returns
+        emit LiquidationExecuted(decoded.userToLiquidate, actualCollateral, asset, finalBal - amountOwed, decoded.protocol);
+        return true;
     }
 
-    // ── WITHDRAW PROFITS ──────────────────────────────────
-    // Call this anytime to move profits from contract to your wallet
+    // --- Admin Functions ---
     function withdraw(address token) external onlyOwner {
         uint256 balance = IERC20(token).balanceOf(address(this));
-        require(balance > 0, "Nothing to withdraw");
+        require(balance > 0, "Nothing");
         IERC20(token).transfer(owner, balance);
-        emit Withdrawn(token, balance);
     }
 
-    // Withdraw native ETH (for any accidentally sent ETH)
     function withdrawETH() external onlyOwner {
         uint256 balance = address(this).balance;
-        require(balance > 0, "No ETH to withdraw");
-        (bool success, ) = owner.call{value: balance}("");
+        (bool success, ) = payable(owner).call{value: balance}("");
         require(success, "ETH transfer failed");
     }
 
-    // ── VIEW — check contract's profit balance ────────────
-    function getBalance(address token) external view returns (uint256) {
-        return IERC20(token).balanceOf(address(this));
-    }
-
-    // ── SAFETY — transfer ownership ───────────────────────
-    function transferOwnership(address newOwner) external onlyOwner {
-        require(newOwner != address(0), "Zero address");
-        owner = newOwner;
-    }
-
-    // Accept ETH
     receive() external payable {}
 }

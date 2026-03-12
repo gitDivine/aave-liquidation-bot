@@ -1,0 +1,270 @@
+
+> aave-liquidation-bot@1.0.0 start
+> node bot/bot.js
+
+[Update] Checking for updates...
+[Update] Already up to date.
+
+
+╔══════════════════════════════════════════════╗
+║      AAVE V3 LIQUIDATION BOT — ACTIVE        ║
+║      Chain: Base                             ║
+║      Contract: 0x3314008F110Eef892B...   ║
+╚══════════════════════════════════════════════╝
+
+[2026-03-11 21:55:08] ℹ️   Wallet: 0x863D20694E1E74A96a149fA21BeFe13FbBF529c6
+[2026-03-11 21:55:08] ℹ️   ETH Balance: 0.002133635371064462 ETH
+[2026-03-11 21:55:08] ℹ️   Min profit threshold: $3
+[2026-03-11 21:55:08] ℹ️   Max gas: 50 gwei
+[2026-03-11 21:55:08] ✅   Contract ownership verified ✓
+[2026-03-11 21:55:11] ℹ️   Loading historical borrowers from last 5000 blocks...
+[2026-03-11 21:58:11] ℹ️   Seeded watchlist with 385 historical borrowers
+[2026-03-11 21:58:11] ℹ️   Active positions after filtering: 86
+[2026-03-11 21:58:11] ℹ️   Listening for new Borrow/Supply events on Base...
+[2026-03-11 21:58:11] ℹ️   Starting position scan loop (every 30s)...
+[2026-03-11 21:58:21] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0414 — watching closely
+[2026-03-11 21:58:32] ✅   Bot is live on Base. Watching 86 positions.
+[2026-03-11 21:58:52] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0414 — watching closely
+[2026-03-11 21:59:22] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0414 — watching closely
+[2026-03-11 21:59:51] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0414 — watching closely
+[2026-03-11 22:00:22] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0414 — watching closely
+[2026-03-11 22:00:52] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0414 — watching closely
+[2026-03-11 22:01:24] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0414 — watching closely
+[2026-03-11 22:01:51] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0414 — watching closely
+[2026-03-11 22:02:22] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0414 — watching closely
+[2026-03-11 22:02:52] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0414 — watching closely
+[2026-03-11 22:03:03] 👁️   Watching 87 positions | 0 liquidations | $0.00 earned
+[2026-03-11 22:03:27] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0414 — watching closely
+[2026-03-11 22:03:53] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0414 — watching closely
+[2026-03-11 22:04:22] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0414 — watching closely
+[2026-03-11 22:04:53] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0414 — watching closely
+[2026-03-11 22:05:24] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0414 — watching closely
+[2026-03-11 22:05:52] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0414 — watching closely
+[2026-03-11 22:06:21] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0414 — watching closely
+[2026-03-11 22:06:51] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0414 — watching closely
+[2026-03-11 22:07:22] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0414 — watching closely
+[2026-03-11 22:07:53] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0414 — watching closely
+[2026-03-11 22:08:04] 👁️   Watching 90 positions | 0 liquidations | $0.00 earned
+[2026-03-11 22:08:22] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0414 — watching closely
+[2026-03-11 22:08:53] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0414 — watching closely
+[2026-03-11 22:09:23] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0414 — watching closely
+[2026-03-11 22:09:57] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0414 — watching closely
+[2026-03-11 22:10:22] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0414 — watching closely
+
+> aave-liquidation-bot@1.0.0 start
+> node bot/bot.js
+
+[Update] Checking for updates...
+[Update] Already up to date.
+
+
+╔══════════════════════════════════════════════╗
+║      AAVE V3 LIQUIDATION BOT — ACTIVE        ║
+║      Chain: Base                             ║
+║      Contract: 0x3314008F110Eef892B...   ║
+╚══════════════════════════════════════════════╝
+
+[2026-03-11 22:10:33] ℹ️   Wallet: 0x863D20694E1E74A96a149fA21BeFe13FbBF529c6
+[2026-03-11 22:10:33] ℹ️   ETH Balance: 0.002133635371064462 ETH
+[2026-03-11 22:10:33] ℹ️   Min profit threshold: $3
+[2026-03-11 22:10:33] ℹ️   Max gas: 50 gwei
+[2026-03-11 22:10:33] ✅   Contract ownership verified ✓
+[2026-03-11 22:10:35] ℹ️   Loading historical borrowers from last 5000 blocks...
+[2026-03-11 22:10:52] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0420 — watching closely
+[2026-03-11 22:11:23] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0420 — watching closely
+[2026-03-11 22:11:52] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0420 — watching closely
+[2026-03-11 22:12:22] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0420 — watching closely
+[2026-03-11 22:12:51] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0420 — watching closely
+[2026-03-11 22:13:02] 👁️   Watching 92 positions | 0 liquidations | $0.00 earned
+[2026-03-11 22:13:21] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0396 — watching closely
+[2026-03-11 22:13:28] ℹ️   Seeded watchlist with 365 historical borrowers
+[2026-03-11 22:13:28] ℹ️   Active positions after filtering: 86
+[2026-03-11 22:13:28] ℹ️   Listening for new Borrow/Supply events on Base...
+[2026-03-11 22:13:28] ℹ️   Starting position scan loop (every 30s)...
+[2026-03-11 22:13:36] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0396 — watching closely
+[2026-03-11 22:13:48] ✅   Bot is live on Base. Watching 86 positions.
+[2026-03-11 22:13:53] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0356 — watching closely
+[2026-03-11 22:14:08] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0356 — watching closely
+[2026-03-11 22:14:23] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0356 — watching closely
+[2026-03-11 22:14:37] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0356 — watching closely
+
+> aave-liquidation-bot@1.0.0 start
+> node bot/bot.js
+
+[Update] Checking for updates...
+[Update] Already up to date.
+
+
+╔══════════════════════════════════════════════╗
+║      AAVE V3 LIQUIDATION BOT — ACTIVE        ║
+║      Chain: Base                             ║
+║      Contract: 0x3314008F110Eef892B...   ║
+╚══════════════════════════════════════════════╝
+
+[2026-03-11 22:14:48] ℹ️   Wallet: 0x863D20694E1E74A96a149fA21BeFe13FbBF529c6
+[2026-03-11 22:14:48] ℹ️   ETH Balance: 0.002133635371064462 ETH
+[2026-03-11 22:14:48] ℹ️   Min profit threshold: $3
+[2026-03-11 22:14:48] ℹ️   Max gas: 50 gwei
+[2026-03-11 22:14:48] ✅   Contract ownership verified ✓
+[2026-03-11 22:14:50] ℹ️   Loading historical borrowers from last 5000 blocks...
+[2026-03-11 22:14:52] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0356 — watching closely
+[2026-03-11 22:15:08] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0356 — watching closely
+[2026-03-11 22:15:25] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0374 — watching closely
+[2026-03-11 22:15:38] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0374 — watching closely
+[2026-03-11 22:15:57] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0374 — watching closely
+[2026-03-11 22:16:12] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0374 — watching closely
+[2026-03-11 22:16:28] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0374 — watching closely
+[2026-03-11 22:16:42] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0374 — watching closely
+[2026-03-11 22:16:58] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0374 — watching closely
+[2026-03-11 22:17:14] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0374 — watching closely
+[2026-03-11 22:17:27] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0374 — watching closely
+[2026-03-11 22:17:38] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0374 — watching closely
+[2026-03-11 22:17:58] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0374 — watching closely
+[2026-03-11 22:18:06] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0374 — watching closely
+[2026-03-11 22:18:11] 👁️   Watching 93 positions | 0 liquidations | $0.00 earned
+[2026-03-11 22:18:19] 👁️   Watching 88 positions | 0 liquidations | $0.00 earned
+[2026-03-11 22:18:23] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0374 — watching closely
+[2026-03-11 22:18:39] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0374 — watching closely
+[2026-03-11 22:18:45] ℹ️   Seeded watchlist with 365 historical borrowers
+[2026-03-11 22:18:45] ℹ️   Active positions after filtering: 85
+[2026-03-11 22:18:45] ℹ️   Listening for new Borrow/Supply events on Base...
+[2026-03-11 22:18:45] ℹ️   Starting position scan loop (every 30s)...
+[2026-03-11 22:18:54] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0374 — watching closely
+[2026-03-11 22:18:54] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0374 — watching closely
+[2026-03-11 22:19:08] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0374 — watching closely
+[2026-03-11 22:19:08] ✅   Bot is live on Base. Watching 85 positions.
+[2026-03-11 22:19:23] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0374 — watching closely
+[2026-03-11 22:19:25] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0374 — watching closely
+[2026-03-11 22:19:38] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0374 — watching closely
+[2026-03-11 22:19:53] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0374 — watching closely
+[2026-03-11 22:19:55] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0374 — watching closely
+[2026-03-11 22:20:08] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0374 — watching closely
+[2026-03-11 22:20:31] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0392 — watching closely
+[2026-03-11 22:20:33] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0392 — watching closely
+[2026-03-11 22:20:44] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0392 — watching closely
+[2026-03-11 22:20:55] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0392 — watching closely
+[2026-03-11 22:20:55] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0392 — watching closely
+[2026-03-11 22:21:09] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0392 — watching closely
+[2026-03-11 22:21:23] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0392 — watching closely
+[2026-03-11 22:21:24] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0392 — watching closely
+[2026-03-11 22:21:42] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0392 — watching closely
+[2026-03-11 22:21:52] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0417 — watching closely
+[2026-03-11 22:21:54] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0417 — watching closely
+[2026-03-11 22:22:07] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0417 — watching closely
+[2026-03-11 22:22:26] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0417 — watching closely
+[2026-03-11 22:22:27] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0417 — watching closely
+[2026-03-11 22:22:40] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0417 — watching closely
+[2026-03-11 22:23:14] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0417 — watching closely
+[2026-03-11 22:23:15] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0417 — watching closely
+[2026-03-11 22:23:15] 👁️   Watching 88 positions | 0 liquidations | $0.00 earned
+[2026-03-11 22:23:27] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0417 — watching closely
+[2026-03-11 22:23:31] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0417 — watching closely
+[2026-03-11 22:23:31] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0417 — watching closely
+[2026-03-11 22:23:34] 👁️   Watching 85 positions | 0 liquidations | $0.00 earned
+[2026-03-11 22:23:39] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0417 — watching closely
+[2026-03-11 22:23:53] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0417 — watching closely
+[2026-03-11 22:23:55] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0417 — watching closely
+[2026-03-11 22:24:09] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0418 — watching closely
+[2026-03-11 22:24:28] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0418 — watching closely
+[2026-03-11 22:24:28] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0418 — watching closely
+[2026-03-11 22:24:46] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0418 — watching closely
+[2026-03-11 22:24:54] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0418 — watching closely
+[2026-03-11 22:24:56] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0418 — watching closely
+[2026-03-11 22:25:16] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0418 — watching closely
+[2026-03-11 22:25:24] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0418 — watching closely
+[2026-03-11 22:25:24] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0418 — watching closely
+[2026-03-11 22:25:37] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0418 — watching closely
+[2026-03-11 22:25:52] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0418 — watching closely
+[2026-03-11 22:25:54] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0418 — watching closely
+[2026-03-11 22:26:09] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0418 — watching closely
+[2026-03-11 22:26:22] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0418 — watching closely
+[2026-03-11 22:26:25] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0418 — watching closely
+[2026-03-11 22:26:37] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0418 — watching closely
+[2026-03-11 22:26:52] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0418 — watching closely
+[2026-03-11 22:26:55] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0418 — watching closely
+[2026-03-11 22:27:07] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0418 — watching closely
+[2026-03-11 22:27:23] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0418 — watching closely
+[2026-03-11 22:27:24] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0418 — watching closely
+[2026-03-11 22:27:38] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0418 — watching closely
+[2026-03-11 22:27:52] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0418 — watching closely
+[2026-03-11 22:27:54] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0418 — watching closely
+[2026-03-11 22:28:05] 👁️   Watching 93 positions | 0 liquidations | $0.00 earned
+[2026-03-11 22:28:08] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0418 — watching closely
+[2026-03-11 22:28:22] 👁️   Watching 89 positions | 0 liquidations | $0.00 earned
+[2026-03-11 22:28:22] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0418 — watching closely
+[2026-03-11 22:28:24] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0418 — watching closely
+[2026-03-11 22:28:37] 👁️   Watching 86 positions | 0 liquidations | $0.00 earned
+[2026-03-11 22:28:38] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0418 — watching closely
+[2026-03-11 22:28:52] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0418 — watching closely
+[2026-03-11 22:28:54] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0418 — watching closely
+[2026-03-11 22:29:08] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0418 — watching closely
+[2026-03-11 22:29:23] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0418 — watching closely
+[2026-03-11 22:29:24] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0418 — watching closely
+[2026-03-11 22:29:37] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0418 — watching closely
+[2026-03-11 22:29:52] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0418 — watching closely
+[2026-03-11 22:29:54] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0418 — watching closely
+[2026-03-11 22:30:08] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0418 — watching closely
+[2026-03-11 22:30:23] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0418 — watching closely
+[2026-03-11 22:30:25] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0418 — watching closely
+[2026-03-11 22:30:37] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0418 — watching closely
+[2026-03-11 22:30:51] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0418 — watching closely
+[2026-03-11 22:30:53] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0418 — watching closely
+[2026-03-11 22:31:08] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0418 — watching closely
+[2026-03-11 22:31:22] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0418 — watching closely
+[2026-03-11 22:31:23] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0418 — watching closely
+[2026-03-11 22:31:38] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0418 — watching closely
+[2026-03-11 22:32:01] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0418 — watching closely
+[2026-03-11 22:32:03] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0418 — watching closely
+[2026-03-11 22:32:08] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0418 — watching closely
+[2026-03-11 22:32:23] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0435 — watching closely
+[2026-03-11 22:32:24] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0435 — watching closely
+[2026-03-11 22:32:40] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0435 — watching closely
+[2026-03-11 22:32:53] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0435 — watching closely
+[2026-03-11 22:32:54] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0435 — watching closely
+[2026-03-11 22:33:06] 👁️   Watching 97 positions | 0 liquidations | $0.00 earned
+[2026-03-11 22:33:07] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0435 — watching closely
+[2026-03-11 22:33:22] 👁️   Watching 93 positions | 0 liquidations | $0.00 earned
+[2026-03-11 22:33:23] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0435 — watching closely
+[2026-03-11 22:33:24] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0435 — watching closely
+[2026-03-11 22:33:38] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0435 — watching closely
+[2026-03-11 22:33:39] 👁️   Watching 91 positions | 0 liquidations | $0.00 earned
+[2026-03-11 22:33:53] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0435 — watching closely
+[2026-03-11 22:33:55] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0435 — watching closely
+[2026-03-11 22:34:07] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0435 — watching closely
+[2026-03-11 22:34:21] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0435 — watching closely
+[2026-03-11 22:34:25] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0435 — watching closely
+[2026-03-11 22:34:37] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0435 — watching closely
+[2026-03-11 22:34:53] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0435 — watching closely
+[2026-03-11 22:34:55] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0435 — watching closely
+[2026-03-11 22:35:10] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0435 — watching closely
+[2026-03-11 22:35:22] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0435 — watching closely
+[2026-03-11 22:35:24] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0435 — watching closely
+[2026-03-11 22:35:38] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0435 — watching closely
+[2026-03-11 22:35:53] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0452 — watching closely
+[2026-03-11 22:35:54] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0452 — watching closely
+[2026-03-11 22:36:07] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0452 — watching closely
+[2026-03-11 22:36:22] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0452 — watching closely
+[2026-03-11 22:36:24] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0452 — watching closely
+[2026-03-11 22:36:37] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0452 — watching closely
+[2026-03-11 22:36:53] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0452 — watching closely
+[2026-03-11 22:36:55] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0452 — watching closely
+[2026-03-11 22:37:08] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0452 — watching closely
+[2026-03-11 22:37:22] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0452 — watching closely
+[2026-03-11 22:37:24] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0452 — watching closely
+[2026-03-11 22:37:38] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0452 — watching closely
+[2026-03-11 22:37:53] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0452 — watching closely
+[2026-03-11 22:37:54] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0452 — watching closely
+[2026-03-11 22:38:07] ⚠️   Approaching: 0xd27c54a9800610e1b57667ad1b4790fb215f108d | HF: 1.0452 — watching closely
+[2026-03-11 22:38:09] 👁️   Watching 99 positions | 0 liquidations | $0.00 earned
+
+
+[2026-03-11 22:38:15] ℹ️   Shutting down...
+[2026-03-11 22:38:15] ℹ️   Session summary: 0 liquidations | ~$0.00 profit
+
+
+[2026-03-11 22:38:15] ℹ️   Shutting down...
+[2026-03-11 22:38:15] ℹ️   Session summary: 0 liquidations | ~$0.00 profit
+
+
+[2026-03-11 22:38:15] ℹ️   Shutting down...
+[2026-03-11 22:38:15] ℹ️   Session summary: 0 liquidations | ~$0.00 profit
