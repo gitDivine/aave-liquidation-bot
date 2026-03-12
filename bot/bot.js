@@ -41,6 +41,9 @@ const PUBLIC_RPCS = [
   "https://1rpc.io/base"
 ];
 
+let httpProvider;
+let workingRpcUrl;
+
 async function validateRpc() {
   const probe = async (url) => {
     try {
@@ -63,7 +66,7 @@ async function validateRpc() {
   if (primary) {
     httpProvider = primary;
     log.success("Primary RPC connected ✓");
-    return;
+    return HTTP_URL;
   }
 
   // 2. Rotate through Public Fallbacks
@@ -73,19 +76,20 @@ async function validateRpc() {
     if (fallback) {
       httpProvider = fallback;
       log.success(`Connected to public fallback: ${rpc.split('//')[1]?.split('/')[0]} ✓`);
-      return;
+      return rpc;
     }
   }
 
   log.error("CRITICAL: All RPC providers failed. Retrying with first public node anyway...");
   httpProvider = new ethers.JsonRpcProvider(PUBLIC_RPCS[0], undefined, { staticNetwork: true });
+  return PUBLIC_RPCS[0];
 }
 
 let wallet;
 let botContract;
 
 async function setupWallet() {
-  await validateRpc();
+  workingRpcUrl = await validateRpc();
   wallet = new ethers.Wallet(PRIVATE_KEY, httpProvider);
   botContract = new ethers.Contract(CONTRACT_ADDR, BOT_CONTRACT_ABI, wallet);
 }
