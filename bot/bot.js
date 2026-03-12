@@ -7,7 +7,7 @@ require("dotenv").config();
 const { ethers } = require("ethers");
 const fs = require("fs");
 const { execSync } = require("child_process");
-const { CHAINS, PROTOCOLS, BOT_CONTRACT_ABI } = require("./config");
+const { CONTRACT_ADDRESS, CHAINS, PROTOCOLS, BOT_CONTRACT_ABI } = require("./config");
 
 // Adapters
 const AaveV3Adapter = require("./protocols/AaveV3Adapter");
@@ -29,7 +29,7 @@ autoUpdate();
 const CHAIN = process.env.CHAIN || "base";
 const PRIVATE_KEY = process.env.PRIVATE_KEY;
 const HTTP_URL = process.env.ALCHEMY_HTTP_URL;
-const CONTRACT_ADDR = process.env.CONTRACT_ADDRESS;
+const CONTRACT_ADDR = CONTRACT_ADDRESS;
 const MIN_PROFIT_USD = parseFloat(process.env.MIN_PROFIT_USD || "10");
 const MAX_GAS_GWEI = parseFloat(process.env.MAX_GAS_GWEI || "50");
 

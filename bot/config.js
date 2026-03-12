@@ -114,4 +114,6 @@ const ATOKEN_ABI = [
   "function scaledBalanceOf(address user) external view returns (uint256)"
 ];
 
-module.exports = { CHAINS, PROTOCOLS, AAVE_POOL_ABI, ERC20_ABI, BOT_CONTRACT_ABI, ATOKEN_ABI };
+const CONTRACT_ADDRESS = "0xbfB83FD70B149DEF53591f50762Ed31c56Cb849E";
+
+module.exports = { CONTRACT_ADDRESS, CHAINS, PROTOCOLS, AAVE_POOL_ABI, ERC20_ABI, BOT_CONTRACT_ABI, ATOKEN_ABI };
