@@ -119,7 +119,7 @@ node bot/withdraw.js 0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913
 | Variable | Default | Description |
 |---|---|---|
 | `CHAIN` | `base` | Target chain: `base`, `arbitrum`, or `polygon` |
-| `MIN_PROFIT_USD` | `10` | Minimum profit to fire a liquidation |
+| `MIN_PROFIT_USD` | `2` | Minimum profit to fire a liquidation |
 | `MAX_GAS_GWEI` | `50` | Maximum gas price |
 | `DRY_RUN` | `false` | Set `true` to simulate without executing |
 
@@ -144,7 +144,7 @@ CHAIN=arbitrum ALCHEMY_WS_URL=wss://arb-mainnet.g.alchemy.com/v2/KEY ALCHEMY_HTT
 | `ALCHEMY_HTTP_URL` | ✅ | HTTP RPC |
 | `CONTRACT_ADDRESS` | Auto | Filled by `npm run deploy` |
 | `CHAIN` | ✅ | `base` / `arbitrum` / `polygon` |
-| `MIN_PROFIT_USD` | No | Min profit threshold (default: `10`) |
+| `MIN_PROFIT_USD` | No | Min profit threshold (default: `2`) |
 | `MAX_GAS_GWEI` | No | Max gas price (default: `50`) |
 | `TELEGRAM_BOT_TOKEN` | No | Telegram alerts |
 | `TELEGRAM_CHAT_ID` | No | Telegram alerts |

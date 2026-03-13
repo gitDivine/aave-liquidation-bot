@@ -32,7 +32,7 @@ const PRIVATE_KEY = process.env.PRIVATE_KEY;
 const HTTP_URL = process.env.ALCHEMY_HTTP_URL || "https://mainnet.base.org";
 const WS_URL = process.env.ALCHEMY_WS_URL || "wss://mainnet.base.org/ws";
 const CONTRACT_ADDR = CONTRACT_ADDRESS;
-const MIN_PROFIT_USD = parseFloat(process.env.MIN_PROFIT_USD || "10");
+const MIN_PROFIT_USD = parseFloat(process.env.MIN_PROFIT_USD || "2");
 const MAX_GAS_GWEI = parseFloat(process.env.MAX_GAS_GWEI || "50");
 
 const PUBLIC_RPCS = [
