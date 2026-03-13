@@ -219,13 +219,13 @@ async function main() {
   log.info(`Starting Multi-Protocol Bot on ${CHAIN}...`);
 
   // Seed watchlist
-  // Ensure the current working RPC is at the front
-  const rpcList = [workingRpcUrl, ...PUBLIC_RPCS.filter(r => r !== workingRpcUrl)];
-
   for (const adapter of adapters) {
     try {
-      log.info(`Seeding ${adapter.name} watchlist (scanning last 2000 blocks)...`);
-      const { users, lastWorkingRpc } = await adapter.getWatchlistSeed(rpcList, 2000);
+      // Recalculate working list so we don't restart on dead RPCs
+      const rpcList = [workingRpcUrl, ...PUBLIC_RPCS.filter(r => r !== workingRpcUrl)];
+
+      log.info(`Seeding ${adapter.name} watchlist (scanning last 10,000 blocks)...`);
+      const { users, lastWorkingRpc } = await adapter.getWatchlistSeed(rpcList, 10000);
 
       // Update global provider if adapter switched to a better RPC
       if (lastWorkingRpc && lastWorkingRpc !== workingRpcUrl) {
