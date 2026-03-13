@@ -256,38 +256,18 @@ async function main() {
   setInterval(scanPositions, 60_000);
   scanPositions();
 
-  // ── Hourly Telegram heartbeat + 10-min update checks ──
-  let heartbeatTick = 0;
+  // ── 10-minute auto-update checks ──
   setInterval(async () => {
-    heartbeatTick++;
-
-    // Every 40 ticks × 15s = 10 minutes — check for updates
-    if (heartbeatTick % 40 === 0) {
-      try {
-        const result = execSync("git pull", { encoding: "utf8", timeout: 15000 }).trim();
-        if (result !== "Already up to date." && result !== "Already up-to-date.") {
-          log.info(`[Update] New code pulled: ${result}`);
-          await notify(`🔄 Update found — restarting bot...`);
-          execSync("npm install --omit=dev", { encoding: "utf8", timeout: 30000 });
-          process.exit(0); // PM2 will auto-restart with new code
-        }
-      } catch { }
-    }
-
-    // 240 ticks × 15s = 1 hour — Telegram heartbeat
-    if (heartbeatTick % 240 === 0) {
-      try {
-        const currentBal = await httpProvider.getBalance(wallet.address);
-        await notify(
-          `💓 Liquidation Bot Alive\n` +
-          `⏱ Uptime: ${Math.floor(heartbeatTick / 240)}h\n` +
-          `👁 Watching: ${watchedUsers.size} users\n` +
-          `💰 Successes: ${liquidationCount}\n` +
-          `🔋 ETH: ${parseFloat(ethers.formatEther(currentBal)).toFixed(4)}`
-        );
-      } catch { }
-    }
-  }, 15_000);
+    try {
+      const result = execSync("git pull", { encoding: "utf8", timeout: 15000 }).trim();
+      if (result !== "Already up to date." && result !== "Already up-to-date.") {
+        log.info(`[Update] New code pulled: ${result}`);
+        await notify(`🔄 Update found — restarting bot...`);
+        execSync("npm install --omit=dev", { encoding: "utf8", timeout: 30000 });
+        process.exit(0);
+      }
+    } catch { }
+  }, 600_000);
 }
 
 main().catch(e => log.error("Fatal:", e.message));
