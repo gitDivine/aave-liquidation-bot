@@ -96,8 +96,8 @@ async function main() {
         process.exit(1);
     }
 
-    const aavePool = ethers.getAddress(chainConfig.aavePool);
-    const swapRouter = ethers.getAddress(chainConfig.swapRouter);
+    const aavePool = ethers.getAddress(chainConfig.aavePool.toLowerCase());
+    const swapRouter = ethers.getAddress(chainConfig.swapRouter.toLowerCase());
 
     console.log(`📋 Constructor args:`);
     console.log(`   _aavePool:   ${aavePool}`);
