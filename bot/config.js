@@ -93,20 +93,42 @@ const MULTICALL3_ABI = [
   "function getEthBalance(address addr) external view returns (uint256 balance)"
 ];
 
+// Map protocol addresses per chain
+const PROTOCOLS_BY_CHAIN = {
+  base: {
+    aaveV3: "0xA238Dd80C259a72e81d7e4664a9801593F98d1c5",
+    compoundV3: "0xB12c13F66ade1f72F6d548316888c7F99056D688", // USDC
+    moonwell: "0xfBB213017a640c9789748671c35d396348FAfECC"
+  },
+  arbitrum: {
+    aaveV3: "0x794a61358D6845594F94dc1DB02A252b5b4814aD",
+    compoundV3: "0xA5EDBDD9646f8dFF606d7448e414884C7d905dCA", // USDC
+    moonwell: null
+  },
+  polygon: {
+    aaveV3: "0x794a61358D6845594F94dc1DB02A252b5b4814aD",
+    compoundV3: null,
+    moonwell: null
+  }
+};
+
+const CHAIN_ID = process.env.CHAIN || "base";
+const PROTOCOL_CONFIG = PROTOCOLS_BY_CHAIN[CHAIN_ID] || PROTOCOLS_BY_CHAIN.base;
+
 const PROTOCOLS = {
   aaveV3: {
     name: "Aave V3",
-    poolAddress: "0xA238Dd80C259a72e81d7e4664a9801593F98d1c5",
+    poolAddress: PROTOCOL_CONFIG.aaveV3,
     type: 0 // Enum: AAVE_V3
   },
   compoundV3: {
     name: "Compound V3",
-    comet: "0xB12c13F66ade1f72F6d548316888c7F99056D688",
+    comet: PROTOCOL_CONFIG.compoundV3,
     type: 1 // COMPOUND_V3
   },
   moonwell: {
     name: "Moonwell",
-    comptroller: "0xfBB213017a640c9789748671c35d396348FAfECC",
+    comptroller: PROTOCOL_CONFIG.moonwell,
     type: 2, // MOONWELL
     mTokens: {
       USDC: "0xeDc90193f915788d5C05896029E979327D911195",
