@@ -119,12 +119,18 @@ process.on("uncaughtException", (err) => {
 });
 
 // ── State ────────────────────────────────────────────────────
-const watchedUsers = new Map(); // address → { hf, debt, collateral, protocol }
+const watchedUsers = new Map(); // address → { hf, debt, collateral, protocol, bucket, lastChecked }
 const liquidating = new Set();
 const adapters = [];
 let totalProfit = 0;
 let liquidationCount = 0;
-let isScanning = false;
+let isScanning = { critical: false, dangerous: false, safe: false };
+
+const BUCKETS = {
+  CRITICAL: 'critical',   // HF < 1.1 — every 30s
+  DANGEROUS: 'dangerous', // HF < 1.3 — every 60s
+  SAFE: 'safe'            // HF >= 1.3 — every 5 mins
+};
 
 const log = {
   info: (...m) => console.log(`[${new Date().toISOString()}] ℹ️  `, ...m),
@@ -142,24 +148,29 @@ function initAdapters() {
 }
 
 // ── Main Loop ────────────────────────────────────────────────
-async function scanPositions() {
-  if (isScanning) return;
-  isScanning = true;
+async function scanBucket(bucket) {
+  if (isScanning[bucket]) return;
+  isScanning[bucket] = true;
 
   try {
+    const usersInBucket = Array.from(watchedUsers.entries())
+      .filter(([_, data]) => data.bucket === bucket);
+
+    if (usersInBucket.length === 0) return;
+
+    log.info(`[Loop: ${bucket.toUpperCase()}] Scanning ${usersInBucket.length} users...`);
+
     for (const adapter of adapters) {
-      const users = Array.from(watchedUsers.entries())
+      const protocolUsers = usersInBucket
         .filter(([_, data]) => data.protocol === adapter.name)
         .map(([key, data]) => ({ key, data }));
 
-      if (users.length === 0) continue;
-
-      log.info(`Scanning ${users.length} users on ${adapter.name} (Batched)...`);
+      if (protocolUsers.length === 0) continue;
 
       // Batch users into chunks of 50
       const CHUNK_SIZE = 50;
-      for (let i = 0; i < users.length; i += CHUNK_SIZE) {
-        const chunk = users.slice(i, i + CHUNK_SIZE);
+      for (let i = 0; i < protocolUsers.length; i += CHUNK_SIZE) {
+        const chunk = protocolUsers.slice(i, i + CHUNK_SIZE);
         const calls = chunk.map(u => adapter.getHealthFactorCallData(u.data.address));
 
         try {
@@ -171,21 +182,28 @@ async function scanPositions() {
 
             if (success && returnData !== "0x") {
               const updated = adapter.decodeHealthFactor(returnData);
-              watchedUsers.set(u.key, { ...u.data, ...updated, lastChecked: Date.now() });
+              const oldBucket = u.data.bucket;
+              const newBucket = updated.healthFactor < 1.1 ? BUCKETS.CRITICAL : (updated.healthFactor < 1.3 ? BUCKETS.DANGEROUS : BUCKETS.SAFE);
+
+              // Update user state
+              watchedUsers.set(u.key, { ...u.data, ...updated, bucket: newBucket, lastChecked: Date.now() });
+
+              if (newBucket !== oldBucket) {
+                log.info(`[Triage] User ${u.data.address} moved: ${oldBucket} → ${newBucket} (HF: ${updated.healthFactor.toFixed(3)})`);
+              }
 
               if (updated.healthFactor < 1.0 && !liquidating.has(u.data.address)) {
-                // Individual liquidation process still async but non-blocking for the loop
                 processLiquidation(u.data.address, adapter);
               }
             }
           }
         } catch (e) {
-          log.warn(`Batch scan failed for ${adapter.name} chunk: ${e.message}`);
+          log.warn(`Batch scan failed for ${adapter.name} (${bucket}): ${e.message}`);
         }
       }
     }
   } finally {
-    isScanning = false;
+    isScanning[bucket] = false;
   }
 }
 
@@ -259,7 +277,8 @@ async function seedWatchlist(blocksBack = 10000) {
       for (const user of users) {
         const key = `${adapter.name}:${user}`;
         if (!watchedUsers.has(key)) {
-          watchedUsers.set(key, { protocol: adapter.name, address: user, lastChecked: 0 });
+          // New users start in SAFE bucket until their first scan
+          watchedUsers.set(key, { protocol: adapter.name, address: user, lastChecked: 0, bucket: BUCKETS.SAFE });
           newUsersCount++;
         }
       }
@@ -286,12 +305,17 @@ async function main() {
   log.info(`Final Watchlist: ${watchedUsers.size} users across all protocols.`);
   await notify(`🤖 Liquidation Bot Started!\n⛓ Chain: ${CHAIN}\n👁 Watching: ${watchedUsers.size} users`);
 
-  // 2. Start Scan Cycle (Health Checks)
-  setInterval(scanPositions, 60_000);
-  scanPositions();
+  // 2. Start Tiered Scan Cycles
+  setInterval(() => scanBucket(BUCKETS.CRITICAL), 30_000);  // Death Row: 30s
+  setInterval(() => scanBucket(BUCKETS.DANGEROUS), 60_000); // Watchlist: 60s
+  setInterval(() => scanBucket(BUCKETS.SAFE), 300_000);      // Safe Zone: 5m
+  
+  scanBucket(BUCKETS.CRITICAL);
+  scanBucket(BUCKETS.DANGEROUS);
+  scanBucket(BUCKETS.SAFE);
 
-  // 3. 1-hour rolling discovery (Discover new borrowers)
-  setInterval(() => seedWatchlist(15000), 3600_000);
+  // 3. High-Frequency discovery (Active Hunting Every 10m)
+  setInterval(() => seedWatchlist(10000), 600_000);
 
   // 4. 10-minute auto-update checks
   setInterval(async () => {
