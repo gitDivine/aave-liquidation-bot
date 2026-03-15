@@ -49,9 +49,11 @@ interface ISwapRouter {
     function exactInputSingle(ExactInputSingleParams calldata params) external returns (uint256 amountOut);
 }
 
-contract LiquidationBot {
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+
+contract LiquidationBot is Ownable, ReentrancyGuard {
     // --- State Variables ---
-    address public owner;
     IPool public immutable aavePool;
     ISwapRouter public immutable swapRouter;
 
@@ -68,15 +70,8 @@ contract LiquidationBot {
     // --- Events ---
     event LiquidationExecuted(address indexed user, address collat, address debt, uint256 profit, ProtocolType protocol);
 
-    // --- Modifiers ---
-    modifier onlyOwner() {
-        require(msg.sender == owner, "Not owner");
-        _;
-    }
-
     // --- Constructor ---
-    constructor(address _aavePool, address _swapRouter) {
-        owner = msg.sender;
+    constructor(address _aavePool, address _swapRouter) Ownable(msg.sender) {
         aavePool = IPool(_aavePool);
         swapRouter = ISwapRouter(_swapRouter);
     }
@@ -109,7 +104,7 @@ contract LiquidationBot {
         uint256 premium,
         address initiator, // Named parameter to avoid ambiguity
         bytes calldata params
-    ) external returns (bool) {
+    ) external nonReentrant returns (bool) {
         require(msg.sender == address(aavePool), "Untrusted");
         require(initiator == address(this), "Foreign FlashLoan");
 
@@ -166,15 +161,21 @@ contract LiquidationBot {
     }
 
     // --- Admin Functions ---
-    function withdraw(address token) external onlyOwner {
+    function sweep(address token) external onlyOwner nonReentrant {
         uint256 balance = IERC20(token).balanceOf(address(this));
         require(balance > 0, "Nothing");
-        IERC20(token).transfer(owner, balance);
+        IERC20(token).transfer(owner(), balance);
     }
 
-    function withdrawETH() external onlyOwner {
+    function withdraw(address token) external onlyOwner nonReentrant {
+        uint256 balance = IERC20(token).balanceOf(address(this));
+        require(balance > 0, "Nothing");
+        IERC20(token).transfer(owner(), balance);
+    }
+
+    function withdrawETH() external onlyOwner nonReentrant {
         uint256 balance = address(this).balance;
-        (bool success, ) = payable(owner).call{value: balance}("");
+        (bool success, ) = payable(owner()).call{value: balance}("");
         require(success, "ETH transfer failed");
     }
 
