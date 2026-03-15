@@ -292,7 +292,12 @@ async function seedWatchlist(blocksBack = 10000) {
         }
       }
     } catch (err) {
-      log.warn(`Discovery failed for ${adapter.name}: ${err.message}`);
+      if (err.message.includes("429") || err.message.includes("limit exceeded")) {
+        log.error("RPC 429 detected during discovery! Triggering failover...");
+        await setupWallet();
+      } else {
+        log.warn(`Discovery failed for ${adapter.name}: ${err.message}`);
+      }
     }
   }
 
