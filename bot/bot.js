@@ -16,6 +16,9 @@ const MoonwellAdapter = require("./protocols/MoonwellAdapter");
 
 function autoUpdate() {
   try {
+    // Safety: Reset files modified by npm install before pulling
+    try { execSync("git checkout package.json package-lock.json", { timeout: 5000 }); } catch {}
+    
     const pullResultRaw = execSync("git pull", { encoding: "utf8", timeout: 15000 });
     const pullResult = pullResultRaw.trim();
     if (!pullResult.toLowerCase().includes("up to date")) {
@@ -293,6 +296,9 @@ async function main() {
   // 4. 10-minute auto-update checks
   setInterval(async () => {
     try {
+      // Safety: Reset files modified by npm install before pulling
+      try { execSync("git checkout package.json package-lock.json", { timeout: 5000 }); } catch {}
+      
       const result = execSync("git pull", { encoding: "utf8", timeout: 15000 }).trim();
       if (result !== "Already up to date." && result !== "Already up-to-date.") {
         log.info(`[Update] New code pulled: ${result}`);
