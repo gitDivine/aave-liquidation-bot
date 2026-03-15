@@ -213,19 +213,15 @@ async function notify(message) {
   } catch { }
 }
 
-async function main() {
-  await setupWallet();
-  initAdapters();
-  log.info(`Starting Multi-Protocol Bot on ${CHAIN}...`);
+async function seedWatchlist(blocksBack = 10000) {
+  log.info(`Discovering new borrowers (scanning last ${blocksBack} blocks)...`);
+  let newUsersCount = 0;
 
-  // Seed watchlist
   for (const adapter of adapters) {
     try {
       // Recalculate working list so we don't restart on dead RPCs
       const rpcList = [workingRpcUrl, ...PUBLIC_RPCS.filter(r => r !== workingRpcUrl)];
-
-      log.info(`Seeding ${adapter.name} watchlist (scanning last 10,000 blocks)...`);
-      const { users, lastWorkingRpc } = await adapter.getWatchlistSeed(rpcList, 10000);
+      const { users, lastWorkingRpc } = await adapter.getWatchlistSeed(rpcList, blocksBack);
 
       // Update global provider if adapter switched to a better RPC
       if (lastWorkingRpc && lastWorkingRpc !== workingRpcUrl) {
@@ -236,27 +232,44 @@ async function main() {
         botContract = new ethers.Contract(CONTRACT_ADDR, BOT_CONTRACT_ABI, wallet);
       }
 
-      let count = 0;
       for (const user of users) {
         const key = `${adapter.name}:${user}`;
         if (!watchedUsers.has(key)) {
           watchedUsers.set(key, { protocol: adapter.name, address: user, lastChecked: 0 });
-          count++;
+          newUsersCount++;
         }
       }
-      log.success(`Seeded ${count} new users from ${adapter.name}.`);
     } catch (err) {
-      log.warn(`Seeding failed for ${adapter.name}: ${err.message}`);
+      log.warn(`Discovery failed for ${adapter.name}: ${err.message}`);
     }
   }
+
+  if (newUsersCount > 0) {
+    log.success(`Added ${newUsersCount} new users to watchlist. Total: ${watchedUsers.size}`);
+  } else {
+    log.info(`No new users found. Watchlist remains at ${watchedUsers.size}`);
+  }
+}
+
+async function main() {
+  await setupWallet();
+  initAdapters();
+  log.info(`Starting Multi-Protocol Bot on ${CHAIN}...`);
+
+  // 1. Initial Deep Scan (24h history)
+  await seedWatchlist(50000);
 
   log.info(`Final Watchlist: ${watchedUsers.size} users across all protocols.`);
   await notify(`🤖 Liquidation Bot Started!\n⛓ Chain: ${CHAIN}\n👁 Watching: ${watchedUsers.size} users`);
 
+  // 2. Start Scan Cycle (Health Checks)
   setInterval(scanPositions, 60_000);
   scanPositions();
 
-  // ── 10-minute auto-update checks ──
+  // 3. 1-hour rolling discovery (Discover new borrowers)
+  setInterval(() => seedWatchlist(15000), 3600_000);
+
+  // 4. 10-minute auto-update checks
   setInterval(async () => {
     try {
       const result = execSync("git pull", { encoding: "utf8", timeout: 15000 }).trim();
