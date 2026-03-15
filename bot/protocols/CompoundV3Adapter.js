@@ -54,6 +54,26 @@ class CompoundV3Adapter {
         };
     }
 
+    getHealthFactorCallData(user) {
+        return {
+            target: this.config.comet,
+            callData: this.contract.interface.encodeFunctionData("isLiquidatable", [user])
+        };
+    }
+
+    decodeHealthFactor(returnData) {
+        try {
+            const decoded = this.contract.interface.decodeFunctionResult("isLiquidatable", returnData);
+            return {
+                healthFactor: decoded[0] ? 0.95 : 1.05,
+                totalDebt: 1n,
+                totalCollateral: 1n
+            };
+        } catch (e) {
+            return { healthFactor: 999 };
+        }
+    }
+
     async identifyLiquidationPair(user) {
         // In Compound V3, you liquidate the account (absorb), then buy collateral.
         // We need to find which collateral asset has the most value.

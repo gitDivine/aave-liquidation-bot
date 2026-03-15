@@ -7,7 +7,7 @@ require("dotenv").config();
 const { ethers } = require("ethers");
 const fs = require("fs");
 const { execSync } = require("child_process");
-const { CONTRACT_ADDRESS, CHAINS, PROTOCOLS, BOT_CONTRACT_ABI } = require("./config");
+const { CONTRACT_ADDRESS, MULTICALL3_ADDRESS, CHAINS, PROTOCOLS, BOT_CONTRACT_ABI, MULTICALL3_ABI } = require("./config");
 
 // Adapters
 const AaveV3Adapter = require("./protocols/AaveV3Adapter");
@@ -87,11 +87,13 @@ async function validateRpc() {
 
 let wallet;
 let botContract;
+let multicallContract;
 
 async function setupWallet() {
   workingRpcUrl = await validateRpc();
   wallet = new ethers.Wallet(PRIVATE_KEY, httpProvider);
   botContract = new ethers.Contract(CONTRACT_ADDR, BOT_CONTRACT_ABI, wallet);
+  multicallContract = new ethers.Contract(MULTICALL3_ADDRESS, MULTICALL3_ABI, wallet);
 }
 
 // ── Global Error Handlers ────────────────────────────────────
@@ -143,20 +145,39 @@ async function scanPositions() {
 
   try {
     for (const adapter of adapters) {
-      const users = Array.from(watchedUsers.entries()).filter(([_, data]) => data.protocol === adapter.name);
+      const users = Array.from(watchedUsers.entries())
+        .filter(([_, data]) => data.protocol === adapter.name)
+        .map(([key, data]) => ({ key, data }));
+
       if (users.length === 0) continue;
 
-      log.info(`Scanning ${users.length} users on ${adapter.name}...`);
-      for (const [key, data] of users) {
-        try {
-          const updated = await adapter.getUserData(data.address);
-          watchedUsers.set(key, { ...data, ...updated, lastChecked: Date.now() });
+      log.info(`Scanning ${users.length} users on ${adapter.name} (Batched)...`);
 
-          if (updated.healthFactor < 1.0 && !liquidating.has(data.address)) {
-            await processLiquidation(data.address, adapter);
+      // Batch users into chunks of 50
+      const CHUNK_SIZE = 50;
+      for (let i = 0; i < users.length; i += CHUNK_SIZE) {
+        const chunk = users.slice(i, i + CHUNK_SIZE);
+        const calls = chunk.map(u => adapter.getHealthFactorCallData(u.data.address));
+
+        try {
+          const results = await multicallContract.tryAggregate.staticCall(false, calls);
+
+          for (let j = 0; j < results.length; j++) {
+            const { success, returnData } = results[j];
+            const u = chunk[j];
+
+            if (success && returnData !== "0x") {
+              const updated = adapter.decodeHealthFactor(returnData);
+              watchedUsers.set(u.key, { ...u.data, ...updated, lastChecked: Date.now() });
+
+              if (updated.healthFactor < 1.0 && !liquidating.has(u.data.address)) {
+                // Individual liquidation process still async but non-blocking for the loop
+                processLiquidation(u.data.address, adapter);
+              }
+            }
           }
         } catch (e) {
-          // Silent or low-level log
+          log.warn(`Batch scan failed for ${adapter.name} chunk: ${e.message}`);
         }
       }
     }

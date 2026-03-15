@@ -86,6 +86,13 @@ const BOT_CONTRACT_ABI = [
   "function owner() external view returns (address)"
 ];
 
+// Multicall3 ABI
+const MULTICALL3_ABI = [
+  "function aggregate(tuple(address target, bytes callData)[] calls) external payable returns (uint256 blockNumber, bytes[] returnData)",
+  "function tryAggregate(bool requireSuccess, tuple(address target, bytes callData)[] calls) external payable returns (tuple(bool success, bytes returnData)[])",
+  "function getEthBalance(address addr) external view returns (uint256 balance)"
+];
+
 const PROTOCOLS = {
   aaveV3: {
     name: "Aave V3",
@@ -115,5 +122,6 @@ const ATOKEN_ABI = [
 ];
 
 const CONTRACT_ADDRESS = "0xbfB83FD70B149DEF53591f50762Ed31c56Cb849E";
+const MULTICALL3_ADDRESS = "0xcA11bde05977b3631167028862bE2a173976CA11";
 
-module.exports = { CONTRACT_ADDRESS, CHAINS, PROTOCOLS, AAVE_POOL_ABI, ERC20_ABI, BOT_CONTRACT_ABI, ATOKEN_ABI };
+module.exports = { CONTRACT_ADDRESS, MULTICALL3_ADDRESS, CHAINS, PROTOCOLS, AAVE_POOL_ABI, ERC20_ABI, BOT_CONTRACT_ABI, ATOKEN_ABI, MULTICALL3_ABI };

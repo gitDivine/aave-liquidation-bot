@@ -43,6 +43,26 @@ class AaveV3Adapter {
         };
     }
 
+    getHealthFactorCallData(user) {
+        return {
+            target: this.config.poolAddress,
+            callData: this.contract.interface.encodeFunctionData("getUserAccountData", [user])
+        };
+    }
+
+    decodeHealthFactor(returnData) {
+        try {
+            const decoded = this.contract.interface.decodeFunctionResult("getUserAccountData", returnData);
+            return {
+                healthFactor: Number(ethers.formatUnits(decoded.healthFactor, 18)),
+                totalDebt: decoded.totalDebtBase,
+                totalCollateral: decoded.totalCollateralBase
+            };
+        } catch (e) {
+            return { healthFactor: 999 }; // Safe fallback
+        }
+    }
+
     async identifyLiquidationPair(user) {
         const reserves = await this.contract.getReservesList();
         let bestDebtAsset = null;

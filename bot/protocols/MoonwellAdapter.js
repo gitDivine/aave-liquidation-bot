@@ -58,6 +58,27 @@ class MoonwellAdapter {
         };
     }
 
+    getHealthFactorCallData(user) {
+        return {
+            target: this.config.comptroller,
+            callData: this.contract.interface.encodeFunctionData("getAccountLiquidity", [user])
+        };
+    }
+
+    decodeHealthFactor(returnData) {
+        try {
+            const decoded = this.contract.interface.decodeFunctionResult("getAccountLiquidity", returnData);
+            const shortfall = decoded[2];
+            return {
+                healthFactor: shortfall > 0n ? 0.95 : 1.05,
+                totalDebt: shortfall,
+                totalCollateral: decoded[1]
+            };
+        } catch (e) {
+            return { healthFactor: 999 };
+        }
+    }
+
     async identifyLiquidationPair(user) {
         // find mToken with highest borrow
         const markets = await this.contract.getAllMarkets();
