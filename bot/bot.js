@@ -30,19 +30,19 @@ function autoUpdate() {
 autoUpdate();
 
 // ── Load & Validate Config ───────────────────────────────────
+const FALLBACKS_BY_CHAIN = {
+  base: ["https://mainnet.base.org", "https://base.publicnode.com", "https://1rpc.io/base"],
+  arbitrum: ["https://arb1.arbitrum.io/rpc", "https://arbitrum.public-rpc.com", "https://1rpc.io/arbitrum"]
+};
 const CHAIN = process.env.CHAIN || "base";
+const PUBLIC_RPCS = FALLBACKS_BY_CHAIN[CHAIN] || FALLBACKS_BY_CHAIN.base;
+
 const PRIVATE_KEY = process.env.PRIVATE_KEY;
-const HTTP_URL = process.env.ALCHEMY_HTTP_URL || "https://mainnet.base.org";
-const WS_URL = process.env.ALCHEMY_WS_URL || "wss://mainnet.base.org/ws";
+const HTTP_URL = process.env.ALCHEMY_HTTP_URL || (CHAIN === "base" ? "https://mainnet.base.org" : "https://arb1.arbitrum.io/rpc");
+const WS_URL = process.env.ALCHEMY_WS_URL || (CHAIN === "base" ? "wss://mainnet.base.org/ws" : "wss://arb1.arbitrum.io/feed");
 const CONTRACT_ADDR = CONTRACT_ADDRESS;
 const MIN_PROFIT_USD = parseFloat(process.env.MIN_PROFIT_USD || "2");
 const MAX_GAS_GWEI = parseFloat(process.env.MAX_GAS_GWEI || "50");
-
-const PUBLIC_RPCS = [
-  "https://mainnet.base.org",
-  "https://base.publicnode.com",
-  "https://1rpc.io/base"
-];
 
 let httpProvider;
 let workingRpcUrl;
@@ -52,33 +52,36 @@ async function validateRpc() {
     try {
       const p = new ethers.JsonRpcProvider(url, undefined, { staticNetwork: true });
       await Promise.race([
-        p.getNetwork(),
+        p.getBlockNumber(), // More standard than getNetwork
         new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 5000))
       ]);
       return p;
     } catch (err) {
-      log.warn(`Probe failed for ${url.split('//')[1]?.split('/')[0] || url}: ${err.message.slice(0, 50)}`);
       return null;
     }
   };
 
-  log.info("Validating RPC infrastructure...");
+  log.info(`Validating RPC infrastructure for ${CHAIN.toUpperCase()}...`);
 
   // 1. Try Primary (Alchemy/User Config)
-  const primary = await probe(HTTP_URL);
-  if (primary) {
-    httpProvider = primary;
-    log.success("Primary RPC connected ✓");
-    return HTTP_URL;
+  if (HTTP_URL && HTTP_URL !== workingRpcUrl) {
+    const primary = await probe(HTTP_URL);
+    if (primary) {
+      httpProvider = primary;
+      log.success(`Primary RPC connected: ${HTTP_URL.split('//')[1]?.split('/')[0]} ✓`);
+      workingRpcUrl = HTTP_URL;
+      return workingRpcUrl;
+    }
   }
 
   // 2. Rotate through Public Fallbacks
-  log.warn("Primary RPC failed. Cycling through public fallbacks...");
   for (const rpc of PUBLIC_RPCS) {
-    const fallback = await probe(rpc);
-    if (fallback) {
-      httpProvider = fallback;
-      log.success(`Connected to public fallback: ${rpc.split('//')[1]?.split('/')[0]} ✓`);
+    if (rpc === workingRpcUrl) continue; // Skip if it just failed
+    const fb = await probe(rpc);
+    if (fb) {
+      httpProvider = fb;
+      log.success(`Switching to public fallback: ${rpc.split('//')[1]?.split('/')[0]} ✓`);
+      workingRpcUrl = rpc;
       return rpc;
     }
   }
@@ -198,6 +201,12 @@ async function scanBucket(bucket) {
             }
           }
         } catch (e) {
+          const is429 = e.message.includes("429") || e.message.includes("limit exceeded");
+          if (is429) {
+            log.error(`RPC 429 detected in ${bucket} scan! Triggering failover...`);
+            await setupWallet();
+            return; // Exit this loop and retry on next interval
+          }
           log.warn(`Batch scan failed for ${adapter.name} (${bucket}): ${e.message}`);
         }
       }
