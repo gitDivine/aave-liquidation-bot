@@ -47,7 +47,15 @@ async function main() {
         },
     };
 
-    const output = JSON.parse(solc.compile(JSON.stringify(input)));
+    function findImports(importPath) {
+        if (importPath.startsWith('@openzeppelin/')) {
+            const absolutePath = path.resolve(__dirname, '..', 'node_modules', importPath);
+            return { contents: fs.readFileSync(absolutePath, 'utf8') };
+        }
+        return { error: 'File not found' };
+    }
+
+    const output = JSON.parse(solc.compile(JSON.stringify(input), { import: findImports }));
 
     if (output.errors) {
         const fatal = output.errors.filter(e => e.severity === 'error');
@@ -88,8 +96,8 @@ async function main() {
         process.exit(1);
     }
 
-    const aavePool = chainConfig.aavePool;
-    const swapRouter = chainConfig.swapRouter;
+    const aavePool = ethers.getAddress(chainConfig.aavePool);
+    const swapRouter = ethers.getAddress(chainConfig.swapRouter);
 
     console.log(`📋 Constructor args:`);
     console.log(`   _aavePool:   ${aavePool}`);
