@@ -149,12 +149,14 @@ CHAIN=arbitrum ALCHEMY_WS_URL=wss://arb-mainnet.g.alchemy.com/v2/KEY ALCHEMY_HTT
 | `TELEGRAM_BOT_TOKEN` | No | Telegram alerts |
 | `TELEGRAM_CHAT_ID` | No | Telegram alerts |
 
-## Security
+## Security & Hardening 🛡️
 
-- Flash loans are atomic — if anything fails, nothing is lost except gas
-- Contract only accepts calls from the owner (your wallet)
-- Never put more ETH than needed for gas in the bot wallet
-- `.env` is gitignored — your keys stay local
+- **Smart Contract Hardening**: The contract now inherits from OpenZeppelin's `ReentrancyGuard` and `Ownable`.
+- **Reentrancy Protection**: Critical functions (`executeOperation`, `withdraw`, `sweep`) are protected against malicious callbacks.
+- **Access Control**: Only the owner (your wallet) can trigger liquidations or withdraw funds.
+- **Profit Sweeping**: Use `sweep(address token)` to move all contract profits to your wallet in one transaction.
+- **Flash Loan Safety**: Flash loans are atomic — if the swap or repayment fails, the entire transaction reverts and no capital is lost.
+- **Environment Persistence**: Designed to run under the [Bots Manager](https://github.com/gitDivine/bots-manager) for 24/7 uptime.
 
 ## Advanced Deployment
 
