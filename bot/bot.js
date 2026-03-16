@@ -34,13 +34,13 @@ const FALLBACKS_BY_CHAIN = {
   base: ["https://mainnet.base.org", "https://base.publicnode.com", "https://1rpc.io/base"],
   arbitrum: ["https://arb1.arbitrum.io/rpc", "https://arbitrum.public-rpc.com", "https://1rpc.io/arbitrum"]
 };
-const CHAIN = process.env.CHAIN || "base";
+const CHAIN = (process.env.CHAIN || "base").toLowerCase().trim();
 const PUBLIC_RPCS = FALLBACKS_BY_CHAIN[CHAIN] || FALLBACKS_BY_CHAIN.base;
 
 const PRIVATE_KEY = process.env.PRIVATE_KEY;
 const HTTP_URL = process.env.ALCHEMY_HTTP_URL || (CHAIN === "base" ? "https://mainnet.base.org" : "https://arb1.arbitrum.io/rpc");
 const WS_URL = process.env.ALCHEMY_WS_URL || (CHAIN === "base" ? "wss://mainnet.base.org/ws" : "wss://arb1.arbitrum.io/feed");
-const CONTRACT_ADDR = CONTRACT_ADDRESS;
+const CONTRACT_ADDR = process.env.CONTRACT_ADDRESS || CONTRACT_ADDRESS;
 const MIN_PROFIT_USD = parseFloat(process.env.MIN_PROFIT_USD || "2");
 const MAX_GAS_GWEI = parseFloat(process.env.MAX_GAS_GWEI || "50");
 
