@@ -19,6 +19,6 @@
     "node": ">=18.0.0"
   },
   "devDependencies": {
-    "solc": "^0.8.34"
+    "solc": "^0.8.20"
   }
 }
