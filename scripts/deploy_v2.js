@@ -37,6 +37,22 @@ async function main() {
     }
 
     const output = JSON.parse(solc.compile(JSON.stringify(input), { import: findImports }));
+    
+    if (output.errors) {
+        const fatal = output.errors.filter(e => e.severity === 'error');
+        if (fatal.length > 0) {
+            console.error('❌ Compilation failed:');
+            fatal.forEach(e => console.error(e.formattedMessage));
+            process.exit(1);
+        }
+    }
+
+    if (!output.contracts || !output.contracts['LiquidationBot.sol']) {
+        console.error('❌ Compilation result empty. This usually means a fatal error occurred.');
+        console.log('Compiler Output:', JSON.stringify(output, null, 2));
+        process.exit(1);
+    }
+
     const compiled = output.contracts['LiquidationBot.sol']['LiquidationBot'];
     const { abi, evm: { bytecode: { object: bytecode } } } = compiled;
 
