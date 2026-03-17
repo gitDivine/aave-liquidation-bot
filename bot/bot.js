@@ -135,8 +135,8 @@ let isScanning = { critical: false, dangerous: false, safe: false };
 
 const BUCKETS = {
   CRITICAL: 'critical',   // HF < 1.1 — every 30s
-  DANGEROUS: 'dangerous', // HF < 1.3 — every 60s
-  SAFE: 'safe'            // HF >= 1.3 — every 5 mins
+  DANGEROUS: 'dangerous', // HF < 1.3 — every 2 mins
+  SAFE: 'safe'            // HF >= 1.3 — every 20 mins
 };
 
 const log = {
@@ -330,16 +330,16 @@ async function main() {
   await notify(`🤖 Liquidation Bot Started!\n⛓ Chain: ${CHAIN}\n👁 Watching: ${watchedUsers.size} users`);
 
   // 2. Start Tiered Scan Cycles
-  setInterval(() => scanBucket(BUCKETS.CRITICAL), 30_000);  // Death Row: 30s
-  setInterval(() => scanBucket(BUCKETS.DANGEROUS), 60_000); // Watchlist: 60s
-  setInterval(() => scanBucket(BUCKETS.SAFE), 300_000);      // Safe Zone: 5m
+  setInterval(() => scanBucket(BUCKETS.CRITICAL), 30_000);   // Death Row: 30s
+  setInterval(() => scanBucket(BUCKETS.DANGEROUS), 120_000); // Watchlist: 2m
+  setInterval(() => scanBucket(BUCKETS.SAFE), 1_200_000);      // Safe Zone: 20m
   
   scanBucket(BUCKETS.CRITICAL);
   scanBucket(BUCKETS.DANGEROUS);
   scanBucket(BUCKETS.SAFE);
 
-  // 3. High-Frequency discovery (Active Hunting Every 10m)
-  setInterval(() => seedWatchlist(10000), 600_000);
+  // 3. Hourly discovery (Active Hunting Every 1h)
+  setInterval(() => seedWatchlist(10000), 3_600_000);
 
   // 4. 10-minute auto-update checks
   setInterval(async () => {
