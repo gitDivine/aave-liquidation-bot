@@ -7,7 +7,7 @@ require("dotenv").config();
 const { ethers } = require("ethers");
 const fs = require("fs");
 const { execSync } = require("child_process");
-const { CONTRACT_ADDRESS, MULTICALL3_ADDRESS, CHAINS, PROTOCOLS, BOT_CONTRACT_ABI, MULTICALL3_ABI } = require("./config");
+const { CONTRACT_ADDRESS: DEFAULT_CONTRACT_ADDRESS, MULTICALL3_ADDRESS, CHAINS, PROTOCOLS, BOT_CONTRACT_ABI, MULTICALL3_ABI } = require("./config");
 
 // Adapters
 const AaveV3Adapter = require("./protocols/AaveV3Adapter");
@@ -40,7 +40,11 @@ const PUBLIC_RPCS = FALLBACKS_BY_CHAIN[CHAIN] || FALLBACKS_BY_CHAIN.base;
 const PRIVATE_KEY = process.env.PRIVATE_KEY;
 const HTTP_URL = process.env.ALCHEMY_HTTP_URL || (CHAIN === "base" ? "https://mainnet.base.org" : "https://arb1.arbitrum.io/rpc");
 const WS_URL = process.env.ALCHEMY_WS_URL || (CHAIN === "base" ? "wss://mainnet.base.org/ws" : "wss://arb1.arbitrum.io/feed");
-const CONTRACT_ADDR = process.env.CONTRACT_ADDRESS || CONTRACT_ADDRESS;
+const CONTRACT_ADDR = process.env.CONTRACT_ADDRESS || DEFAULT_CONTRACT_ADDRESS;
+if (!CONTRACT_ADDR) {
+  console.error("❌ CRITICAL: CONTRACT_ADDRESS not found in .env or config.");
+  process.exit(1);
+}
 const MIN_PROFIT_USD = parseFloat(process.env.MIN_PROFIT_USD || "2");
 const MAX_GAS_GWEI = parseFloat(process.env.MAX_GAS_GWEI || "50");
 
@@ -145,9 +149,15 @@ const log = {
 
 // ── Initialize Adapters ──────────────────────────────────────
 function initAdapters() {
-  adapters.push(new AaveV3Adapter(httpProvider, PROTOCOLS.aaveV3));
-  adapters.push(new CompoundV3Adapter(httpProvider, PROTOCOLS.compoundV3));
-  adapters.push(new MoonwellAdapter(httpProvider, PROTOCOLS.moonwell));
+  if (PROTOCOLS.aaveV3.poolAddress) {
+    adapters.push(new AaveV3Adapter(httpProvider, PROTOCOLS.aaveV3));
+  }
+  if (PROTOCOLS.compoundV3.comet) {
+    adapters.push(new CompoundV3Adapter(httpProvider, PROTOCOLS.compoundV3));
+  }
+  if (PROTOCOLS.moonwell.comptroller) {
+    adapters.push(new MoonwellAdapter(httpProvider, PROTOCOLS.moonwell));
+  }
 }
 
 // ── Main Loop ────────────────────────────────────────────────
