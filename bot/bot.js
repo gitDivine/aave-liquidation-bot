@@ -16,16 +16,28 @@ const MoonwellAdapter = require("./protocols/MoonwellAdapter");
 
 function autoUpdate() {
   try {
-    // Safety: Reset files modified by npm install before pulling
-    try { execSync("git checkout package.json package-lock.json", { timeout: 5000 }); } catch {}
+    const branch = 'master';
+    execSync(`git fetch origin ${branch}`, { stdio: 'ignore', timeout: 15000 });
     
-    const pullResultRaw = execSync("git pull", { encoding: "utf8", timeout: 15000 });
-    const pullResult = pullResultRaw.trim();
-    if (!pullResult.toLowerCase().includes("up to date")) {
-      execSync("npm install --omit=dev", { encoding: "utf8", timeout: 30000 });
+    const local = execSync('git rev-parse HEAD', { encoding: 'utf8' }).trim();
+    const remote = execSync(`git rev-parse origin/${branch}`, { encoding: 'utf8' }).trim();
+    
+    if (local !== remote) {
+      console.log(`[Update] New version detected (${remote.slice(0, 7)}). Applying clean update...`);
+      
+      // Force clean reset to remote state
+      execSync(`git reset --hard origin/${branch}`, { stdio: 'inherit' });
+      
+      // Re-install dependencies
+      console.log('[Update] Re-installing dependencies...');
+      execSync('npm install --omit=dev', { encoding: 'utf8', timeout: 60000 });
+      
+      console.log('[Update] Update applied. Restarting bot...');
       process.exit(0);
     }
-  } catch { }
+  } catch (err) {
+    console.warn('[Update] Auto-update skipped:', err.message);
+  }
 }
 autoUpdate();
 
@@ -342,20 +354,7 @@ async function main() {
   setInterval(() => seedWatchlist(10000), 1_800_000);
 
   // 4. 10-minute auto-update checks
-  setInterval(async () => {
-    try {
-      // Safety: Reset files modified by npm install before pulling
-      try { execSync("git checkout package.json package-lock.json", { timeout: 5000 }); } catch {}
-      
-      const result = execSync("git pull", { encoding: "utf8", timeout: 15000 }).trim();
-      if (result !== "Already up to date." && result !== "Already up-to-date.") {
-        log.info(`[Update] New code pulled: ${result}`);
-        await notify(`🔄 Update found — restarting bot...`);
-        execSync("npm install --omit=dev", { encoding: "utf8", timeout: 30000 });
-        process.exit(0);
-      }
-    } catch { }
-  }, 600_000);
+  setInterval(() => autoUpdate(), 600_000);
 }
 
 main().catch(e => log.error("Fatal:", e.message));
