@@ -96,7 +96,7 @@ class CompoundV3Adapter {
         return {
             debtAsset: baseToken,
             collateralAsset: bestCollateral,
-            debtAmount: 0n, // Contract will absorb what it can
+            debtAmount: maxBal / 2n, // Spend half of collateral value in debt to liquidate
             protocolAddress: this.config.comet
         };
     }

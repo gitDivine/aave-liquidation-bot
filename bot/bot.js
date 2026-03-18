@@ -241,13 +241,25 @@ async function scanBucket(bucket) {
 async function processLiquidation(user, adapter) {
   if (liquidating.has(user)) return;
   liquidating.add(user);
-  log.money(`Attempting liquidation: ${user} on ${adapter.name}`);
+  log.money(`Target identified: ${user} on ${adapter.name}`);
 
   try {
     const params = await adapter.identifyLiquidationPair(user);
-    if (!params.debtAsset || !params.collateralAsset) return;
+    if (!params.debtAsset || !params.collateralAsset) {
+      log.warn(`Could not find liquidation pair for ${user}`);
+      return;
+    }
 
-    // Fire transaction
+    // STEP 1: Simulation (Sniper Mode) 🎯
+    const isSuccess = await simulateLiquidation(params, adapter, user);
+    if (!isSuccess) {
+      log.warn(`❌ Simulation REVERTED: ${user} (Stale or Front-run)`);
+      return;
+    }
+
+    log.success(`🎯 Simulation SUCCESS: Proceeding with liquidation for ${user}`);
+
+    // STEP 2: Fire real transaction
     const tx = await botContract.execute(
       params.collateralAsset,
       params.debtAsset,
@@ -267,9 +279,27 @@ async function processLiquidation(user, adapter) {
       await notify(`✅ Liquidation on ${adapter.name} successful!\nTarget: ${user}\nTX: ${tx.hash}`);
     }
   } catch (err) {
-    log.error(`Liquidation failed: ${err.message}`);
+    log.error(`Liquidation execution failed: ${err.message}`);
   } finally {
     liquidating.delete(user);
+  }
+}
+
+async function simulateLiquidation(params, adapter, user) {
+  try {
+    // We use staticCall to simulate for $0 gas
+    await botContract.execute.staticCall(
+      params.collateralAsset,
+      params.debtAsset,
+      user,
+      params.debtAmount,
+      3000,
+      adapter.type,
+      params.protocolAddress
+    );
+    return true;
+  } catch (e) {
+    return false;
   }
 }
 

@@ -106,11 +106,14 @@ class MoonwellAdapter {
             }
         }
 
+        const mContract = new ethers.Contract(bestDebtMTokens, MTOKEN_ABI, this.provider);
+        const underlying = await mContract.underlying();
+
         return {
-            debtAsset: (new ethers.Contract(bestDebtMTokens, MTOKEN_ABI, this.provider)).underlying(), // Actually the underlying
-            collateralAsset: bestCollateralMToken, // Contract needs the cToken for liquidateBorrow
+            debtAsset: underlying, 
+            collateralAsset: bestCollateralMToken, 
             debtAmount: maxDebt / 2n,
-            protocolAddress: bestDebtMTokens // In Moonwell, we call liquidateBorrow on the MToken of the debt
+            protocolAddress: bestDebtMTokens 
         };
     }
 }
