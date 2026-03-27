@@ -72,7 +72,7 @@ class AaveV3Adapter {
 
         for (const reserve of reserves) {
             const reserveData = await this.contract.getReserveData(reserve);
-            const debtToken = reserveData.data.variableDebtTokenAddress;
+            const debtToken = (reserveData.data || reserveData).variableDebtTokenAddress;
             if (!debtToken || debtToken === ethers.ZeroAddress) continue;
 
             const debtContract = new ethers.Contract(debtToken, ERC20_ABI, this.provider);
@@ -92,7 +92,7 @@ class AaveV3Adapter {
             let maxCollateralUsd = 0;
             for (const reserve of reserves) {
                 const rData = await this.contract.getReserveData(reserve);
-                const aToken = rData.data.aTokenAddress;
+                const aToken = (rData.data || rData).aTokenAddress;
                 if (!aToken || aToken === ethers.ZeroAddress) continue;
                 const aContract = new ethers.Contract(aToken, ERC20_ABI, this.provider);
                 const aBal = await aContract.balanceOf(user);
