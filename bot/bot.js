@@ -244,28 +244,45 @@ async function processLiquidation(user, adapter) {
   log.money(`Target identified: ${user} on ${adapter.name}`);
 
   try {
+    // Gas guard — skip if gas is too expensive
+    const feeData = await httpProvider.getFeeData();
+    const gasGwei = Number(feeData.gasPrice || 0n) / 1e9;
+    if (gasGwei > MAX_GAS_GWEI) {
+      log.warn(`⛽ Gas too high: ${gasGwei.toFixed(1)} gwei > ${MAX_GAS_GWEI} max. Skipping ${user}`);
+      return;
+    }
+
     const params = await adapter.identifyLiquidationPair(user);
     if (!params.debtAsset || !params.collateralAsset) {
       log.warn(`Could not find liquidation pair for ${user}`);
       return;
     }
 
-    // STEP 1: Simulation (Sniper Mode) 🎯
-    const isSuccess = await simulateLiquidation(params, adapter, user);
-    if (!isSuccess) {
-      log.warn(`❌ Simulation REVERTED: ${user} (Stale or Front-run)`);
+    // Try pool fees from config: default first, then fallback
+    const chainConfig = CHAINS[CHAIN] || CHAINS.base;
+    const feesToTry = [chainConfig.poolFees.default, chainConfig.poolFees.fallback];
+
+    // STEP 1: Simulation (Sniper Mode) — try each fee tier
+    let bestFee = null;
+    for (const fee of feesToTry) {
+      const success = await simulateLiquidation(params, adapter, user, fee);
+      if (success) { bestFee = fee; break; }
+    }
+
+    if (bestFee === null) {
+      log.warn(`❌ Simulation REVERTED at all fee tiers: ${user} (Stale or Front-run)`);
       return;
     }
 
-    log.success(`🎯 Simulation SUCCESS: Proceeding with liquidation for ${user}`);
+    log.success(`🎯 Simulation SUCCESS (fee: ${bestFee}): Proceeding with liquidation for ${user}`);
 
-    // STEP 2: Fire real transaction
+    // STEP 2: Fire real transaction with the fee tier that passed simulation
     const tx = await botContract.execute(
       params.collateralAsset,
       params.debtAsset,
       user,
       params.debtAmount,
-      3000, // pool fee
+      bestFee,
       adapter.type,
       params.protocolAddress,
       { gasLimit: 1_200_000 }
@@ -275,8 +292,9 @@ async function processLiquidation(user, adapter) {
     const receipt = await tx.wait();
     if (receipt.status === 1) {
       liquidationCount++;
-      log.success(`Liquidation successful! Protocol: ${adapter.name}`);
-      await notify(`✅ Liquidation on ${adapter.name} successful!\nTarget: ${user}\nTX: ${tx.hash}`);
+      const gasCost = Number(receipt.gasUsed * (receipt.gasPrice || feeData.gasPrice)) / 1e18;
+      log.success(`Liquidation successful! Protocol: ${adapter.name} | Gas: ${gasCost.toFixed(5)} ETH`);
+      await notify(`✅ Liquidation on ${adapter.name} successful!\nTarget: ${user}\nFee tier: ${bestFee}\nGas: ${gasCost.toFixed(5)} ETH\nTX: ${tx.hash}`);
     }
   } catch (err) {
     log.error(`Liquidation execution failed: ${err.message}`);
@@ -285,7 +303,7 @@ async function processLiquidation(user, adapter) {
   }
 }
 
-async function simulateLiquidation(params, adapter, user) {
+async function simulateLiquidation(params, adapter, user, poolFee) {
   try {
     // We use staticCall to simulate for $0 gas
     await botContract.execute.staticCall(
@@ -293,7 +311,7 @@ async function simulateLiquidation(params, adapter, user) {
       params.debtAsset,
       user,
       params.debtAmount,
-      3000,
+      poolFee,
       adapter.type,
       params.protocolAddress
     );
