@@ -145,6 +145,83 @@ let totalProfit = 0;
 let liquidationCount = 0;
 let isScanning = { critical: false, dangerous: false, safe: false };
 
+// ── Metrics ──────────────────────────────────────────────────
+const metrics = {
+  scansCompleted: 0,
+  usersScanned: 0,
+  hfBelow105: 0,       // Warning zone count (current snapshot)
+  hfBelow100: 0,       // Liquidatable count (current snapshot)
+  liqAttempts: 0,
+  liqSimulated: 0,
+  liqSimPassed: 0,
+  liqExecuted: 0,
+  liqReverted: 0,
+  gasBlocked: 0,       // Skipped due to high gas
+  bucketMoves: 0,      // Triage bucket transitions
+  rpcFailovers: 0,
+  startTime: Date.now(),
+  periodStart: Date.now(),
+
+  reset() {
+    this.scansCompleted = 0;
+    this.usersScanned = 0;
+    this.liqAttempts = 0;
+    this.liqSimulated = 0;
+    this.liqSimPassed = 0;
+    this.liqExecuted = 0;
+    this.liqReverted = 0;
+    this.gasBlocked = 0;
+    this.bucketMoves = 0;
+    this.rpcFailovers = 0;
+    this.periodStart = Date.now();
+  },
+
+  snapshot() {
+    // Count current HF distribution
+    let below105 = 0, below100 = 0;
+    for (const [_, data] of watchedUsers) {
+      if (data.healthFactor !== undefined) {
+        if (data.healthFactor < 1.0) below100++;
+        else if (data.healthFactor < 1.05) below105++;
+      }
+    }
+    this.hfBelow105 = below105;
+    this.hfBelow100 = below100;
+  },
+
+  getHeartbeatLine() {
+    this.snapshot();
+    const critical = Array.from(watchedUsers.values()).filter(d => d.bucket === 'critical').length;
+    const dangerous = Array.from(watchedUsers.values()).filter(d => d.bucket === 'dangerous').length;
+    const safe = Array.from(watchedUsers.values()).filter(d => d.bucket === 'safe').length;
+
+    return `[Metrics] ${watchedUsers.size} users | C:${critical} D:${dangerous} S:${safe} | ` +
+      `HF<1.05: ${this.hfBelow105} | HF<1.0: ${this.hfBelow100} | ` +
+      `Liq: ${this.liqExecuted}/${this.liqAttempts} (${this.liqSimPassed} sim pass) | ` +
+      `Gas blocked: ${this.gasBlocked} | Moves: ${this.bucketMoves}`;
+  },
+
+  getHourlySummary() {
+    this.snapshot();
+    const elapsed = ((Date.now() - this.periodStart) / 3600000).toFixed(1);
+    return [
+      `📊 Hourly Liquidation Metrics — ${CHAIN}`,
+      ``,
+      `Users watched: ${watchedUsers.size}`,
+      `HF < 1.05 (warning): ${this.hfBelow105}`,
+      `HF < 1.0 (liquidatable): ${this.hfBelow100}`,
+      `Scans: ${this.scansCompleted} | Users checked: ${this.usersScanned}`,
+      `Bucket moves: ${this.bucketMoves}`,
+      `Liq attempts: ${this.liqAttempts}`,
+      `Simulations: ${this.liqSimPassed}/${this.liqSimulated} passed`,
+      `Executed: ${this.liqExecuted} | Reverted: ${this.liqReverted}`,
+      `Gas blocked: ${this.gasBlocked}`,
+      `RPC failovers: ${this.rpcFailovers}`,
+      `Period: ${elapsed}h`,
+    ].join('\n');
+  }
+};
+
 const BUCKETS = {
   CRITICAL: 'critical',   // HF < 1.1 — every 30s
   DANGEROUS: 'dangerous', // HF < 1.3 — every 2 mins
@@ -183,6 +260,8 @@ async function scanBucket(bucket) {
 
     if (usersInBucket.length === 0) return;
 
+    metrics.scansCompleted++;
+    metrics.usersScanned += usersInBucket.length;
     log.info(`[Loop: ${bucket.toUpperCase()}] Scanning ${usersInBucket.length} users...`);
 
     for (const adapter of adapters) {
@@ -214,6 +293,7 @@ async function scanBucket(bucket) {
               watchedUsers.set(u.key, { ...u.data, ...updated, bucket: newBucket, lastChecked: Date.now() });
 
               if (newBucket !== oldBucket) {
+                metrics.bucketMoves++;
                 log.info(`[Triage] User ${u.data.address} moved: ${oldBucket} → ${newBucket} (HF: ${updated.healthFactor.toFixed(3)})`);
               }
 
@@ -225,6 +305,7 @@ async function scanBucket(bucket) {
         } catch (e) {
           const is429 = e.message.includes("429") || e.message.includes("limit exceeded");
           if (is429) {
+            metrics.rpcFailovers++;
             log.error(`RPC 429 detected in ${bucket} scan! Triggering failover...`);
             await setupWallet();
             return; // Exit this loop and retry on next interval
@@ -241,6 +322,7 @@ async function scanBucket(bucket) {
 async function processLiquidation(user, adapter) {
   if (liquidating.has(user)) return;
   liquidating.add(user);
+  metrics.liqAttempts++;
   log.money(`Target identified: ${user} on ${adapter.name}`);
 
   try {
@@ -248,6 +330,7 @@ async function processLiquidation(user, adapter) {
     const feeData = await httpProvider.getFeeData();
     const gasGwei = Number(feeData.gasPrice || 0n) / 1e9;
     if (gasGwei > MAX_GAS_GWEI) {
+      metrics.gasBlocked++;
       log.warn(`⛽ Gas too high: ${gasGwei.toFixed(1)} gwei > ${MAX_GAS_GWEI} max. Skipping ${user}`);
       return;
     }
@@ -265,8 +348,9 @@ async function processLiquidation(user, adapter) {
     // STEP 1: Simulation (Sniper Mode) — try each fee tier
     let bestFee = null;
     for (const fee of feesToTry) {
+      metrics.liqSimulated++;
       const success = await simulateLiquidation(params, adapter, user, fee);
-      if (success) { bestFee = fee; break; }
+      if (success) { metrics.liqSimPassed++; bestFee = fee; break; }
     }
 
     if (bestFee === null) {
@@ -292,9 +376,12 @@ async function processLiquidation(user, adapter) {
     const receipt = await tx.wait();
     if (receipt.status === 1) {
       liquidationCount++;
+      metrics.liqExecuted++;
       const gasCost = Number(receipt.gasUsed * (receipt.gasPrice || feeData.gasPrice)) / 1e18;
       log.success(`Liquidation successful! Protocol: ${adapter.name} | Gas: ${gasCost.toFixed(5)} ETH`);
       await notify(`✅ Liquidation on ${adapter.name} successful!\nTarget: ${user}\nFee tier: ${bestFee}\nGas: ${gasCost.toFixed(5)} ETH\nTX: ${tx.hash}`);
+    } else {
+      metrics.liqReverted++;
     }
   } catch (err) {
     log.error(`Liquidation execution failed: ${err.message}`);
@@ -403,6 +490,17 @@ async function main() {
 
   // 4. 10-minute auto-update checks
   setInterval(() => autoUpdate(), 600_000);
+
+  // 5. Metrics heartbeat every 60s (visible in bots-manager logs)
+  setInterval(() => {
+    log.info(metrics.getHeartbeatLine());
+  }, 60_000);
+
+  // 6. Hourly Telegram metrics summary
+  setInterval(() => {
+    notify(metrics.getHourlySummary());
+    metrics.reset();
+  }, 3600_000);
 }
 
 main().catch(e => log.error("Fatal:", e.message));
